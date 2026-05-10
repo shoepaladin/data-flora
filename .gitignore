@@ -7,5 +7,6 @@ __pycache__/
 seattle_area_school_dashboard/ospi_match_review.csv
 seattle_area_school_dashboard/ospi_match_review.log
 
-# Generated site output (rebuilt by CI)
-seattle_area_school_dashboard/site/
+# Ranking analysis output
+seattle_area_school_dashboard/site/pca-analysis.html
+
