@@ -1,0 +1,202 @@
+from pathlib import Path
+import sys
+import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+from seattle_schools_dashboard.nces import (
+    DERIVED_SUBTOTAL_MINUS_ADULT,
+    DERIVED_TOTAL_MINUS_ADULT,
+    apply_lunch_metrics,
+    apply_membership_row,
+    apply_wide_membership_row,
+    finalize_records,
+    is_open_school,
+    normalize_school_level,
+    safe_share,
+)
+
+
+class NcesAggregationTests(unittest.TestCase):
+    def test_apply_membership_row_uses_derived_minus_adult_totals(self) -> None:
+        record = {
+            "school_id": "123",
+            "enrollment": None,
+            "frpl_count": 0,
+            "race_counts": {
+                "american_indian_alaska_native_share": 0,
+                "asian_share": 0,
+                "black_african_american_share": 0,
+                "hispanic_latino_share": 0,
+                "native_hawaiian_pacific_islander_share": 0,
+                "two_or_more_races_share": 0,
+                "white_share": 0,
+                "race_not_specified_share": 0,
+            },
+            "sex_counts": {
+                "female_share": 0,
+                "male_share": 0,
+                "sex_not_specified_share": 0,
+            },
+        }
+
+        apply_membership_row(
+            record,
+            {
+                "TOTAL_INDICATOR": DERIVED_TOTAL_MINUS_ADULT,
+                "GRADE": "No Category Codes",
+                "RACE_ETHNICITY": "No Category Codes",
+                "SEX": "No Category Codes",
+                "STUDENT_COUNT": "100",
+            },
+        )
+        apply_membership_row(
+            record,
+            {
+                "TOTAL_INDICATOR": DERIVED_SUBTOTAL_MINUS_ADULT,
+                "GRADE": "No Category Codes",
+                "RACE_ETHNICITY": "White",
+                "SEX": "Female",
+                "STUDENT_COUNT": "40",
+            },
+        )
+        apply_membership_row(
+            record,
+            {
+                "TOTAL_INDICATOR": DERIVED_SUBTOTAL_MINUS_ADULT,
+                "GRADE": "No Category Codes",
+                "RACE_ETHNICITY": "White",
+                "SEX": "Male",
+                "STUDENT_COUNT": "35",
+            },
+        )
+        apply_membership_row(
+            record,
+            {
+                "TOTAL_INDICATOR": DERIVED_SUBTOTAL_MINUS_ADULT,
+                "GRADE": "No Category Codes",
+                "RACE_ETHNICITY": "Black or African American",
+                "SEX": "Female",
+                "STUDENT_COUNT": "10",
+            },
+        )
+
+        self.assertEqual(record["enrollment"], 100)
+        self.assertEqual(record["race_counts"]["white_share"], 75)
+        self.assertEqual(record["race_counts"]["black_african_american_share"], 10)
+        self.assertEqual(record["sex_counts"]["female_share"], 50)
+        self.assertEqual(record["sex_counts"]["male_share"], 35)
+
+    def test_finalize_records_computes_shares(self) -> None:
+        schools = {
+            "123": {
+                "id": "123",
+                "name": "Sample School",
+                "district_id": "seattle",
+                "district_name": "Seattle",
+                "school_level": "High",
+            }
+        }
+        school_year_records = {
+            "123": {
+                "school_id": "123",
+                "enrollment": 100,
+                "frpl_count": 60,
+                "race_counts": {
+                    "american_indian_alaska_native_share": 0,
+                    "asian_share": 10,
+                    "black_african_american_share": 15,
+                    "hispanic_latino_share": 25,
+                    "native_hawaiian_pacific_islander_share": 0,
+                    "two_or_more_races_share": 5,
+                    "white_share": 40,
+                    "race_not_specified_share": 5,
+                },
+                "sex_counts": {
+                    "female_share": 48,
+                    "male_share": 50,
+                    "sex_not_specified_share": 2,
+                },
+            }
+        }
+
+        records = finalize_records("2024-2025", schools, school_year_records)
+
+        self.assertEqual(records[0]["combined_frpl_share"], 0.6)
+        self.assertEqual(records[0]["asian_share"], 0.1)
+        self.assertEqual(records[0]["female_share"], 0.48)
+
+    def test_apply_wide_membership_row_uses_member_and_aggregate_columns(self) -> None:
+        record = {
+            "school_id": "123",
+            "enrollment": None,
+            "frpl_count": 0,
+            "race_counts": {
+                "american_indian_alaska_native_share": 0,
+                "asian_share": 0,
+                "black_african_american_share": 0,
+                "hispanic_latino_share": 0,
+                "native_hawaiian_pacific_islander_share": 0,
+                "two_or_more_races_share": 0,
+                "white_share": 0,
+                "race_not_specified_share": 0,
+            },
+            "sex_counts": {
+                "female_share": 0,
+                "male_share": 0,
+                "sex_not_specified_share": 0,
+            },
+        }
+
+        apply_wide_membership_row(
+            record,
+            {
+                "MEMBER": "100",
+                "AM": "3",
+                "AS": "7",
+                "BL": "10",
+                "HI": "15",
+                "HP": "1",
+                "TR": "4",
+                "WH": "58",
+                "AMALM": "1",
+                "ASALM": "4",
+                "BLALM": "6",
+                "HIALM": "7",
+                "HPALM": "1",
+                "TRALM": "2",
+                "WHALM": "30",
+                "AMALF": "2",
+                "ASALF": "3",
+                "BLALF": "4",
+                "HIALF": "8",
+                "HPALF": "0",
+                "TRALF": "2",
+                "WHALF": "28",
+            },
+        )
+
+        self.assertEqual(record["enrollment"], 100)
+        self.assertEqual(record["race_counts"]["white_share"], 58)
+        self.assertEqual(record["sex_counts"]["male_share"], 51)
+        self.assertEqual(record["sex_counts"]["female_share"], 47)
+        self.assertEqual(record["sex_counts"]["sex_not_specified_share"], 2)
+
+    def test_is_open_school_accepts_updated_or_sy_status(self) -> None:
+        self.assertTrue(is_open_school({"UPDATED_STATUS_TEXT": "Open", "SY_STATUS_TEXT": "Closed"}))
+        self.assertTrue(is_open_school({"UPDATED_STATUS_TEXT": "Closed", "SY_STATUS_TEXT": "Open"}))
+        self.assertFalse(is_open_school({"UPDATED_STATUS_TEXT": "Closed", "SY_STATUS_TEXT": "Closed"}))
+
+    def test_safe_share_handles_missing_denominator(self) -> None:
+        self.assertIsNone(safe_share(4, None))
+        self.assertIsNone(safe_share(4, 0))
+        self.assertEqual(safe_share(1, 4), 0.25)
+
+    def test_normalize_school_level_maps_legacy_codes(self) -> None:
+        self.assertEqual(normalize_school_level("1"), "Elementary")
+        self.assertEqual(normalize_school_level("3"), "High")
+        self.assertEqual(normalize_school_level("N"), "Other")
+
+
+if __name__ == "__main__":
+    unittest.main()

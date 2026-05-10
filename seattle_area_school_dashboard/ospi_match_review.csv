@@ -1,0 +1,312 @@
+ospi_district,ospi_school,match_type,match_score,nces_school_id,nces_school_name
+Bainbridge Island,Bainbridge High School,exact,1.0,530033000043,Bainbridge High School
+Bainbridge Island,Bainbridge Special Education Services,exact,1.0,530033003113,Bainbridge Special Education Services
+Bainbridge Island,Capt Johnston Blakely Elem Sch,exact,1.0,530033000045,Capt Johnston Blakely Elem Sch
+Bainbridge Island,Eagle Harbor High School,exact,1.0,530033003110,Eagle Harbor High School
+Bainbridge Island,Halilts Elementary School,exact,1.0,530033000044,Halilts Elementary School
+Bainbridge Island,Mosaic Home Education Partnership,exact,1.0,530033002802,Mosaic Home Education Partnership
+Bainbridge Island,Odyssey Multiage Program,exact,1.0,530033002523,Odyssey Multiage Program
+Bainbridge Island,Ordway Elementary,exact,1.0,530033000047,Ordway Elementary
+Bainbridge Island,Sonoji Sakai Intermediate,exact,1.0,530033002734,Sonoji Sakai Intermediate
+Bainbridge Island,Woodward Middle School,exact,1.0,530033002452,Woodward Middle School
+Bellevue,Ardmore Elementary School,exact,1.0,530039000058,Ardmore Elementary School
+Bellevue,Bellevue Big Picture School,exact,1.0,530039003354,Bellevue Big Picture School
+Bellevue,Bellevue Digital Discovery,exact,1.0,530039003883,Bellevue Digital Discovery
+Bellevue,Bellevue High School,exact,1.0,530039000060,Bellevue High School
+Bellevue,Bellevue Open Doors Reengagement,exact,1.0,530039003462,Bellevue Open Doors Reengagement
+Bellevue,Bennett Elementary School,exact,1.0,530039000062,Bennett Elementary School
+Bellevue,Cherry Crest Elementary School,exact,1.0,530039000063,Cherry Crest Elementary School
+Bellevue,Chinook Middle School,exact,1.0,530039000064,Chinook Middle School
+Bellevue,Clyde Hill Elementary,exact,1.0,530039000065,Clyde Hill Elementary
+Bellevue,Enatai Elementary School,exact,1.0,530039000067,Enatai Elementary School
+Bellevue,Highland Middle School,exact,1.0,530039000068,Highland Middle School
+Bellevue,Interlake Senior High School,exact,1.0,530039000072,Interlake Senior High School
+Bellevue,International School,exact,1.0,530039003149,International School
+Bellevue,Jing Mei Elementary School,exact,1.0,530039003455,Jing Mei Elementary School
+Bellevue,Lake Hills Elementary,exact,1.0,530039000075,Lake Hills Elementary
+Bellevue,Medina Elementary School,exact,1.0,530039000076,Medina Elementary School
+Bellevue,Newport Heights Elementary,exact,1.0,530039000077,Newport Heights Elementary
+Bellevue,Newport Senior High School,exact,1.0,530039000078,Newport Senior High School
+Bellevue,Odle Middle School,exact,1.0,530039000079,Odle Middle School
+Bellevue,Phantom Lake Elementary,exact,1.0,530039000082,Phantom Lake Elementary
+Bellevue,Puesta del Sol Elementary School,exact,1.0,530039000090,Puesta del Sol Elementary School
+Bellevue,Sammamish Senior High,exact,1.0,530039000085,Sammamish Senior High
+Bellevue,Sherwood Forest Elementary,exact,1.0,530039000086,Sherwood Forest Elementary
+Bellevue,Somerset Elementary School,exact,1.0,530039000087,Somerset Elementary School
+Bellevue,Spiritridge Elementary School,exact,1.0,530039000088,Spiritridge Elementary School
+Bellevue,Stevenson Elementary,exact,1.0,530039000089,Stevenson Elementary
+Bellevue,Tillicum Middle School,exact,1.0,530039000093,Tillicum Middle School
+Bellevue,Tyee Middle School,exact,1.0,530039000094,Tyee Middle School
+Bellevue,Woodridge Elementary,exact,1.0,530039000096,Woodridge Elementary
+Central Kitsap,Barker Creek Community School,exact,1.0,530108003622,Barker Creek Community School
+Central Kitsap,Brownsville Elementary,exact,1.0,530108000176,Brownsville Elementary
+Central Kitsap,Central Kitsap High School,exact,1.0,530108000177,Central Kitsap High School
+Central Kitsap,Central Kitsap Middle School,exact,1.0,530108000178,Central Kitsap Middle School
+Central Kitsap,Clear Creek Elementary School,exact,1.0,530108000180,Clear Creek Elementary School
+Central Kitsap,Cottonwood Elementary School,exact,1.0,530108000181,Cottonwood Elementary School
+Central Kitsap,Cougar Valley Elementary,exact,1.0,530108002251,Cougar Valley Elementary
+Central Kitsap,Emerald Heights Elementary,exact,1.0,530108000757,Emerald Heights Elementary
+Central Kitsap,Esquire Hills Elementary,exact,1.0,530108000182,Esquire Hills Elementary
+Central Kitsap,Fairview Middle School,exact,1.0,530108000183,Fairview Middle School
+Central Kitsap,Green Mountain Elementary,exact,1.0,530108000530,Green Mountain Elementary
+Central Kitsap,John D. Bud Hawk Elementary at Jackson Park,exact,1.0,530108000184,John D. Bud Hawk Elementary at Jackson Park
+Central Kitsap,Klahowya Secondary,exact,1.0,530108002524,Klahowya Secondary
+Central Kitsap,Olympic High School,exact,1.0,530108001753,Olympic High School
+Central Kitsap,Pinecrest Elementary,exact,1.0,530108002655,Pinecrest Elementary
+Central Kitsap,Ridgetop Middle School,exact,1.0,530108002056,Ridgetop Middle School
+Central Kitsap,Silver Ridge Elementary,exact,1.0,530108002287,Silver Ridge Elementary
+Central Kitsap,Silverdale Elementary,exact,1.0,530108001754,Silverdale Elementary
+Central Kitsap,Woodlands Elementary,exact,1.0,530108001752,Woodlands Elementary
+Issaquah,Apollo Elementary,exact,1.0,530375000570,Apollo Elementary
+Issaquah,Beaver Lake Middle School,exact,1.0,530375001495,Beaver Lake Middle School
+Issaquah,Briarwood Elementary,exact,1.0,530375000571,Briarwood Elementary
+Issaquah,Cascade Ridge Elementary,exact,1.0,530375002881,Cascade Ridge Elementary
+Issaquah,Cedar Trails Elementary,exact,1.0,530375003794,Cedar Trails Elementary
+Issaquah,Challenger Elementary,exact,1.0,530375002214,Challenger Elementary
+Issaquah,Clark Elementary,exact,1.0,530375002107,Clark Elementary
+Issaquah,Cougar Mountain Middle School,exact,1.0,530375003795,Cougar Mountain Middle School
+Issaquah,Cougar Ridge Elementary,exact,1.0,530375000482,Cougar Ridge Elementary
+Issaquah,Creekside Elementary,exact,1.0,530375003331,Creekside Elementary
+Issaquah,Discovery Elementary,exact,1.0,530375002426,Discovery Elementary
+Issaquah,Echo Glen School,exact,1.0,530375001773,Echo Glen School
+Issaquah,Endeavour Elementary School,exact,1.0,530375002518,Endeavour Elementary School
+Issaquah,Gibson Ek High School,exact,1.0,530375003588,Gibson Ek High School
+Issaquah,Grand Ridge Elementary,exact,1.0,530375003067,Grand Ridge Elementary
+Issaquah,Issaquah High School,exact,1.0,530375000574,Issaquah High School
+Issaquah,Issaquah Middle School,exact,1.0,530375000573,Issaquah Middle School
+Issaquah,Issaquah Special Services,exact,1.0,530375001490,Issaquah Special Services
+Issaquah,Issaquah Valley Elementary,exact,1.0,530375000575,Issaquah Valley Elementary
+Issaquah,Liberty Sr High School,exact,1.0,530375000576,Liberty Sr High School
+Issaquah,Maple Hills Elementary,exact,1.0,530375000577,Maple Hills Elementary
+Issaquah,Maywood Middle School,exact,1.0,530375000579,Maywood Middle School
+Issaquah,Newcastle Elementary School,exact,1.0,530375002981,Newcastle Elementary School
+Issaquah,Pacific Cascade Middle School,exact,1.0,530375003337,Pacific Cascade Middle School
+Issaquah,Pine Lake Middle School,exact,1.0,530375000580,Pine Lake Middle School
+Issaquah,Skyline High School,exact,1.0,530375002567,Skyline High School
+Issaquah,Sunny Hills Elementary,exact,1.0,530375000581,Sunny Hills Elementary
+Issaquah,Sunset Elementary,exact,1.0,530375002307,Sunset Elementary
+Lake Washington,Albert Einstein Elementary,exact,1.0,530423002648,Albert Einstein Elementary
+Lake Washington,Alexander Graham Bell Elementary,exact,1.0,530423000656,Alexander Graham Bell Elementary
+Lake Washington,Benjamin Franklin Elementary,exact,1.0,530423000658,Benjamin Franklin Elementary
+Lake Washington,Benjamin Rush Elementary,exact,1.0,530423000659,Benjamin Rush Elementary
+Lake Washington,Carl Sandburg Elementary,exact,1.0,530423000660,Carl Sandburg Elementary
+Lake Washington,Christa Mcauliffe Elementary,exact,1.0,530423002311,Christa Mcauliffe Elementary
+Lake Washington,Clara Barton Elementary School,exact,1.0,530423003640,Clara Barton Elementary School
+Lake Washington,Community School,exact,1.0,530423000673,Community School
+Lake Washington,Contractual Schools,exact,1.0,530423001598,Contractual Schools
+Lake Washington,Discovery Community  School,exact,1.0,530423002448,Discovery Community  School
+Lake Washington,Eastlake High School,exact,1.0,530423001141,Eastlake High School
+Lake Washington,Elizabeth Blackwell Elementary,exact,1.0,530423002649,Elizabeth Blackwell Elementary
+Lake Washington,Ella Baker Elementary School,exact,1.0,530423003628,Ella Baker Elementary School
+Lake Washington,Emerson High School,exact,1.0,530423001784,Emerson High School
+Lake Washington,Emerson K-12,exact,1.0,530423002725,Emerson K-12
+Lake Washington,Emily Dickinson Elementary,exact,1.0,530423000661,Emily Dickinson Elementary
+Lake Washington,Environmental & Adventure School,exact,1.0,530423002726,Environmental & Adventure School
+Lake Washington,Evergreen Middle School,exact,1.0,530423001841,Evergreen Middle School
+Lake Washington,Explorer Community School,exact,1.0,530423002519,Explorer Community School
+Lake Washington,Finn Hill Middle School,exact,1.0,530423000663,Finn Hill Middle School
+Lake Washington,Helen Keller Elementary,exact,1.0,530423000666,Helen Keller Elementary
+Lake Washington,Henry David Thoreau Elementary,exact,1.0,530423000684,Henry David Thoreau Elementary
+Lake Washington,Horace Mann Elementary,exact,1.0,530423000667,Horace Mann Elementary
+Lake Washington,Inglewood Middle School,exact,1.0,530423002435,Inglewood Middle School
+Lake Washington,International Community School,exact,1.0,530423002568,International Community School
+Lake Washington,John J. Audubon Elementary,exact,1.0,530423000657,John J. Audubon Elementary
+Lake Washington,John Muir Elementary,exact,1.0,530423000668,John Muir Elementary
+Lake Washington,Juanita Elementary,exact,1.0,530423000669,Juanita Elementary
+Lake Washington,Juanita High School,exact,1.0,530423000670,Juanita High School
+Lake Washington,Kamiakin Middle School,exact,1.0,530423000671,Kamiakin Middle School
+Lake Washington,Kirkland Middle School,exact,1.0,530423000672,Kirkland Middle School
+Lake Washington,Lake Washington High School,exact,1.0,530423000674,Lake Washington High School
+Lake Washington,Lakeview Elementary,exact,1.0,530423000675,Lakeview Elementary
+Lake Washington,Laura Ingalls Wilder Elementary,exact,1.0,530423002257,Laura Ingalls Wilder Elementary
+Lake Washington,Louisa May Alcott Elementary,exact,1.0,530423002062,Louisa May Alcott Elementary
+Lake Washington,Margaret Mead Elementary,exact,1.0,530423001785,Margaret Mead Elementary
+Lake Washington,Mark Twain Elementary,exact,1.0,530423000676,Mark Twain Elementary
+Lake Washington,Nikola Tesla STEM High School,exact,1.0,530423003432,Nikola Tesla STEM High School
+Lake Washington,Norman Rockwell Elementary,exact,1.0,530423001842,Norman Rockwell Elementary
+Lake Washington,Northstar Middle School,exact,1.0,530423001843,Northstar Middle School
+Lake Washington,Peter Kirk Elementary,exact,1.0,530423000677,Peter Kirk Elementary
+Lake Washington,Rachel Carson Elementary,exact,1.0,530423003242,Rachel Carson Elementary
+Lake Washington,Redmond Elementary,exact,1.0,530423000678,Redmond Elementary
+Lake Washington,Redmond High School,exact,1.0,530423000679,Redmond High School
+Lake Washington,Redmond Middle School,exact,1.0,530423000680,Redmond Middle School
+Lake Washington,Renaissance School of Art and Reasoning,exact,1.0,530423003070,Renaissance School of Art and Reasoning
+Lake Washington,Robert Frost Elementary,exact,1.0,530423000681,Robert Frost Elementary
+Lake Washington,Rosa Parks Elementary,exact,1.0,530423003077,Rosa Parks Elementary
+Lake Washington,Rose Hill Elementary,exact,1.0,530423000682,Rose Hill Elementary
+Lake Washington,Rose Hill Middle School,exact,1.0,530423000683,Rose Hill Middle School
+Lake Washington,Samantha Smith Elementary,exact,1.0,530423002216,Samantha Smith Elementary
+Lake Washington,Stella Schola,exact,1.0,530423002983,Stella Schola
+Lake Washington,Timberline Middle School,exact,1.0,530423003708,Timberline Middle School
+Mercer Island,Island Park Elementary,exact,1.0,530498000758,Island Park Elementary
+Mercer Island,Islander Middle School,exact,1.0,530498000764,Islander Middle School
+Mercer Island,Lakeridge Elementary School,exact,1.0,530498000759,Lakeridge Elementary School
+Mercer Island,Mercer Island High School,exact,1.0,530498000761,Mercer Island High School
+Mercer Island,Northwood Elementary School,exact,1.0,530498003566,Northwood Elementary School
+Mercer Island,West Mercer Elementary,exact,1.0,530498000765,West Mercer Elementary
+North Kitsap,Choice Academy,exact,1.0,530576003627,Choice Academy
+North Kitsap,David Wolfle Elementary,exact,1.0,530576000856,David Wolfle Elementary
+North Kitsap,District Programs,exact,1.0,530576002453,District Programs
+North Kitsap,Hilder Pearson Elementary,exact,1.0,530576000853,Hilder Pearson Elementary
+North Kitsap,Kingston High School,exact,1.0,530576003201,Kingston High School
+North Kitsap,Kingston Middle School,exact,1.0,530576002324,Kingston Middle School
+North Kitsap,North Kitsap High School,exact,1.0,530576000852,North Kitsap High School
+North Kitsap,North Kitsap Online Academy & Parent Assisted Learning,exact,1.0,530576002653,North Kitsap Online Academy & Parent Assisted Learning
+North Kitsap,North Kitsap Options,exact,1.0,530576003750,North Kitsap Options
+North Kitsap,Poulsbo Elementary School,exact,1.0,530576000854,Poulsbo Elementary School
+North Kitsap,Poulsbo Middle School,exact,1.0,530576000851,Poulsbo Middle School
+North Kitsap,Richard Gordon Elementary,exact,1.0,530576001627,Richard Gordon Elementary
+North Kitsap,Suquamish Elementary School,exact,1.0,530576000855,Suquamish Elementary School
+North Kitsap,Vinland Elementary,exact,1.0,530576001626,Vinland Elementary
+Renton,Benson Hill Elementary School,exact,1.0,530723001064,Benson Hill Elementary School
+Renton,Bryn Mawr Elementary School,exact,1.0,530723001065,Bryn Mawr Elementary School
+Renton,Campbell Hill Elementary School,exact,1.0,530723001066,Campbell Hill Elementary School
+Renton,Cascade Elementary School,exact,1.0,530723001067,Cascade Elementary School
+Renton,Dimmitt Middle School,exact,1.0,530723002564,Dimmitt Middle School
+Renton,H.O.M.E. Program,exact,1.0,530723002721,H.O.M.E. Program
+Renton,Hazelwood Elementary School,exact,1.0,530723001071,Hazelwood Elementary School
+Renton,Hazen Senior High School,exact,1.0,530723001080,Hazen Senior High School
+Renton,Highlands Elementary School,exact,1.0,530723001072,Highlands Elementary School
+Renton,Hilltop Heritage Elementary School,exact,1.0,530723003910,Hilltop Heritage Elementary School
+Renton,Honey Dew Elementary,exact,1.0,530723003351,Honey Dew Elementary
+Renton,Kennydale Elementary School,exact,1.0,530723001075,Kennydale Elementary School
+Renton,Lakeridge Elementary School,exact,1.0,530723001076,Lakeridge Elementary School
+Renton,Lindbergh Senior High School,exact,1.0,530723001077,Lindbergh Senior High School
+Renton,Maplewood Heights Elementary School,exact,1.0,530723001078,Maplewood Heights Elementary School
+Renton,McKnight Middle School,exact,1.0,530723001079,McKnight Middle School
+Renton,Nelsen Middle School,exact,1.0,530723001070,Nelsen Middle School
+Renton,Open Door Youth Reengagement,exact,1.0,530723003450,Open Door Youth Reengagement
+Renton,Out Of District Facility,exact,1.0,530723001410,Out Of District Facility
+Renton,Renton Academy,exact,1.0,530723003073,Renton Academy
+Renton,Renton Park Elementary School,exact,1.0,530723001081,Renton Park Elementary School
+Renton,Renton Senior High School,exact,1.0,530723001082,Renton Senior High School
+Renton,Sartori Elementary School,exact,1.0,530723003651,Sartori Elementary School
+Renton,Sierra Heights Elementary School,exact,1.0,530723001084,Sierra Heights Elementary School
+Renton,Talbot Hill Elementary School,exact,1.0,530723001085,Talbot Hill Elementary School
+Renton,Talley High School,exact,1.0,530723003400,Talley High School
+Renton,Tiffany Park Elementary School,exact,1.0,530723001087,Tiffany Park Elementary School
+Renton,Vera Risdon Middle School,exact,1.0,530723003603,Vera Risdon Middle School
+Seattle,Adams Elementary School,exact,1.0,530771001127,Adams Elementary School
+Seattle,Aki Kurose Middle School,exact,1.0,530771001249,Aki Kurose Middle School
+Seattle,Alan T. Sugiyama High School,exact,1.0,530771001234,Alan T. Sugiyama High School
+Seattle,Alki Elementary School,exact,1.0,530771001129,Alki Elementary School
+Seattle,Arbor Heights Elementary School,exact,1.0,530771001135,Arbor Heights Elementary School
+Seattle,B F Day Elementary School,exact,1.0,530771001157,B F Day Elementary School
+Seattle,Bailey Gatzert Elementary School,exact,1.0,530771001173,Bailey Gatzert Elementary School
+Seattle,Ballard High School,exact,1.0,530771001138,Ballard High School
+Seattle,Beacon Hill International School,exact,1.0,530771001140,Beacon Hill International School
+Seattle,Broadview-Thomson K-8 School,exact,1.0,530771001145,Broadview-Thomson K-8 School
+Seattle,Bryant Elementary School,exact,1.0,530771001146,Bryant Elementary School
+Seattle,Cascade Parent Partnership Program,exact,1.0,530771003741,Cascade Parent Partnership Program
+Seattle,Cascadia Elementary,exact,1.0,530771003390,Cascadia Elementary
+Seattle,Catharine Blaine K-8 School,exact,1.0,530771002017,Catharine Blaine K-8 School
+Seattle,Cedar Park Elementary School,exact,1.0,530771003613,Cedar Park Elementary School
+Seattle,Chief Sealth International High School,exact,1.0,530771001149,Chief Sealth International High School
+Seattle,Cleveland High School STEM,exact,1.0,530771001150,Cleveland High School STEM
+Seattle,Concord International School,exact,1.0,530771001154,Concord International School
+Seattle,Daniel Bagley Elementary School,exact,1.0,530771001137,Daniel Bagley Elementary School
+Seattle,David T. Denny International Middle School,exact,1.0,530771001913,David T. Denny International Middle School
+Seattle,Dearborn Park International School,exact,1.0,530771001158,Dearborn Park International School
+Seattle,Dunlap Elementary School,exact,1.0,530771001161,Dunlap Elementary School
+Seattle,Eckstein Middle School,exact,1.0,530771001162,Eckstein Middle School
+Seattle,Edmonds S. Meany Middle School,exact,1.0,530771003612,Edmonds S. Meany Middle School
+Seattle,Emerson Elementary School,exact,1.0,530771001163,Emerson Elementary School
+Seattle,Fairmount Park Elementary School,exact,1.0,530771003497,Fairmount Park Elementary School
+Seattle,Franklin High School,exact,1.0,530771001168,Franklin High School
+Seattle,Frantz Coe Elementary School,exact,1.0,530771001151,Frantz Coe Elementary School
+Seattle,Garfield High School,exact,1.0,530771001171,Garfield High School
+Seattle,Gatewood Elementary School,exact,1.0,530771001172,Gatewood Elementary School
+Seattle,Genesee Hill Elementary,exact,1.0,530771001245,Genesee Hill Elementary
+Seattle,Graham Hill Elementary School,exact,1.0,530771001175,Graham Hill Elementary School
+Seattle,Green Lake Elementary School,exact,1.0,530771001176,Green Lake Elementary School
+Seattle,Greenwood Elementary School,exact,1.0,530771001177,Greenwood Elementary School
+Seattle,Hamilton International Middle School,exact,1.0,530771001180,Hamilton International Middle School
+Seattle,Hawthorne Elementary School,exact,1.0,530771002269,Hawthorne Elementary School
+Seattle,Hazel Wolf K-8,exact,1.0,530771003271,Hazel Wolf K-8
+Seattle,Highland Park Elementary School,exact,1.0,530771001183,Highland Park Elementary School
+Seattle,Ingraham High School,exact,1.0,530771001187,Ingraham High School
+Seattle,Interagency Detention School,exact,1.0,530771002928,Interagency Detention School
+Seattle,Interagency Open Doors,exact,1.0,530771003505,Interagency Open Doors
+Seattle,Interagency Programs,exact,1.0,530771001365,Interagency Programs
+Seattle,James Baldwin Elementary School,exact,1.0,530771001225,James Baldwin Elementary School
+Seattle,Jane Addams Middle School,exact,1.0,530771003467,Jane Addams Middle School
+Seattle,John Hay Elementary School,exact,1.0,530771001192,John Hay Elementary School
+Seattle,John Muir Elementary School,exact,1.0,530771001221,John Muir Elementary School
+Seattle,John Rogers Elementary School,exact,1.0,530771001193,John Rogers Elementary School
+Seattle,John Stanford International School,exact,1.0,530771001197,John Stanford International School
+Seattle,Kimball Elementary School,exact,1.0,530771001169,Kimball Elementary School
+Seattle,Lafayette Elementary School,exact,1.0,530771001195,Lafayette Elementary School
+Seattle,Laurelhurst Elementary School,exact,1.0,530771001198,Laurelhurst Elementary School
+Seattle,Lawton Elementary School,exact,1.0,530771001199,Lawton Elementary School
+Seattle,Leschi Elementary School,exact,1.0,530771001201,Leschi Elementary School
+Seattle,Licton Springs K-8,exact,1.0,530771001132,Licton Springs K-8
+Seattle,Lincoln High School,exact,1.0,530771003719,Lincoln High School
+Seattle,Louisa Boren STEM K-8,exact,1.0,530771003426,Louisa Boren STEM K-8
+Seattle,Lowell Elementary School,exact,1.0,530771001205,Lowell Elementary School
+Seattle,Loyal Heights Elementary School,exact,1.0,530771001206,Loyal Heights Elementary School
+Seattle,Madison Middle School,exact,1.0,530771001207,Madison Middle School
+Seattle,Madrona K-5 School,exact,1.0,530771001216,Madrona K-5 School
+Seattle,Magnolia Elementary School,exact,1.0,530771003714,Magnolia Elementary School
+Seattle,Maple Elementary School,exact,1.0,530771001209,Maple Elementary School
+Seattle,Martin Luther King Jr. Elementary School,exact,1.0,530771001143,Martin Luther King Jr. Elementary School
+Seattle,McClure Middle School,exact,1.0,530771001212,McClure Middle School
+Seattle,McDonald International School,exact,1.0,530771003332,McDonald International School
+Seattle,McGilvra Elementary School,exact,1.0,530771001214,McGilvra Elementary School
+Seattle,Mercer International Middle School,exact,1.0,530771001136,Mercer International Middle School
+Seattle,Middle College High School,exact,1.0,530771002349,Middle College High School
+Seattle,Montlake Elementary School,exact,1.0,530771001219,Montlake Elementary School
+Seattle,Nathan Hale High School,exact,1.0,530771001222,Nathan Hale High School
+Seattle,North Beach Elementary School,exact,1.0,530771001223,North Beach Elementary School
+Seattle,Nova High School,exact,1.0,530771001226,Nova High School
+Seattle,Olympic Hills Elementary School,exact,1.0,530771001228,Olympic Hills Elementary School
+Seattle,Olympic View Elementary School,exact,1.0,530771001229,Olympic View Elementary School
+Seattle,Orca K-8 School,exact,1.0,530771002231,Orca K-8 School
+Seattle,Pathfinder K-8 School,exact,1.0,530771001102,Pathfinder K-8 School
+Seattle,Private School Services,exact,1.0,530771003046,Private School Services
+Seattle,Queen Anne Elementary,exact,1.0,530771003318,Queen Anne Elementary
+Seattle,Rainier Beach High School,exact,1.0,530771001236,Rainier Beach High School
+Seattle,Rainier View Elementary School,exact,1.0,530771003361,Rainier View Elementary School
+Seattle,Rising Star Elementary School,exact,1.0,530771001255,Rising Star Elementary School
+Seattle,Robert Eagle Staff Middle School,exact,1.0,530771003620,Robert Eagle Staff Middle School
+Seattle,Roosevelt High School,exact,1.0,530771001239,Roosevelt High School
+Seattle,Roxhill Elementary School,exact,1.0,530771001240,Roxhill Elementary School
+Seattle,Sacajawea Elementary School,exact,1.0,530771001242,Sacajawea Elementary School
+Seattle,Salmon Bay K-8 School,exact,1.0,530771002716,Salmon Bay K-8 School
+Seattle,Sand Point Elementary,exact,1.0,530771003316,Sand Point Elementary
+Seattle,Sanislo Elementary School,exact,1.0,530771001244,Sanislo Elementary School
+Seattle,Seattle World School,exact,1.0,530771001311,Seattle World School
+Seattle,South Shore PK-8 School,exact,1.0,530771002933,South Shore PK-8 School
+Seattle,Stephen Decatur Elementary School,exact,1.0,530771003618,Stephen Decatur Elementary School
+Seattle,Stevens Elementary School,exact,1.0,530771001251,Stevens Elementary School
+Seattle,The Center School,exact,1.0,530771002842,The Center School
+Seattle,Thornton Creek Elementary School,exact,1.0,530771001253,Thornton Creek Elementary School
+Seattle,Thurgood Marshall Elementary,exact,1.0,530771002347,Thurgood Marshall Elementary
+Seattle,Tops K-8 School,exact,1.0,530771001307,Tops K-8 School
+Seattle,View Ridge Elementary School,exact,1.0,530771001256,View Ridge Elementary School
+Seattle,Viewlands Elementary School,exact,1.0,530771003356,Viewlands Elementary School
+Seattle,Washington Middle School,exact,1.0,530771001259,Washington Middle School
+Seattle,Wedgwood Elementary School,exact,1.0,530771001261,Wedgwood Elementary School
+Seattle,West Seattle Elementary School,exact,1.0,530771001182,West Seattle Elementary School
+Seattle,West Seattle High School,exact,1.0,530771001262,West Seattle High School
+Seattle,West Woodland Elementary School,exact,1.0,530771001263,West Woodland Elementary School
+Seattle,Whitman Middle School,exact,1.0,530771001264,Whitman Middle School
+Seattle,Whittier Elementary School,exact,1.0,530771001265,Whittier Elementary School
+Seattle,Wing Luke Elementary School,exact,1.0,530771001267,Wing Luke Elementary School
+Snoqualmie Valley,Cascade View Elementary School,exact,1.0,530804002980,Cascade View Elementary School
+Snoqualmie Valley,Chief Kanim Middle School,exact,1.0,530804002439,Chief Kanim Middle School
+Snoqualmie Valley,Edwin R Opstad Elementary,exact,1.0,530804002239,Edwin R Opstad Elementary
+Snoqualmie Valley,Fall City Elementary,exact,1.0,530804001329,Fall City Elementary
+Snoqualmie Valley,Mount Si High School,exact,1.0,530804001330,Mount Si High School
+Snoqualmie Valley,North Bend Elementary School,exact,1.0,530804001331,North Bend Elementary School
+Snoqualmie Valley,Snoqualmie Access,exact,1.0,530804003309,Snoqualmie Access
+Snoqualmie Valley,Snoqualmie Elementary,exact,1.0,530804001332,Snoqualmie Elementary
+Snoqualmie Valley,Snoqualmie Middle School,exact,1.0,530804003693,Snoqualmie Middle School
+Snoqualmie Valley,Snoqualmie Parent Partnership Program,exact,1.0,530804003394,Snoqualmie Parent Partnership Program
+Snoqualmie Valley,Timber Ridge Elementary School,exact,1.0,530804003560,Timber Ridge Elementary School
+Snoqualmie Valley,Twin Falls Middle School,exact,1.0,530804003252,Twin Falls Middle School
+Snoqualmie Valley,Two Rivers School,exact,1.0,530804002158,Two Rivers School
+Vashon Island,Chautauqua Elementary,exact,1.0,530930001394,Chautauqua Elementary
+Vashon Island,Family Link,exact,1.0,530930002720,Family Link
+Vashon Island,McMurray Middle School,exact,1.0,530930001589,McMurray Middle School
+Vashon Island,Student Link,exact,1.0,530930003112,Student Link
+Vashon Island,Vashon Island High School,exact,1.0,530930001591,Vashon Island High School

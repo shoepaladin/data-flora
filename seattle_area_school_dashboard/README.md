@@ -1,0 +1,50 @@
+# Seattle Area School Dashboard
+
+This repository is a pilot implementation and technical plan for a public school performance dashboard intended for GitHub Pages deployment.
+
+The repository is intentionally designed to avoid committing full raw NCES extracts. Raw source files should be downloaded into a temporary working directory during the build, transformed into a compact dashboard payload, and then discarded.
+
+The project includes:
+
+- A technical specification in [`docs/technical-spec.md`](docs/technical-spec.md)
+- A small Python data pipeline and pilot dataset generator in `src/`
+- Unit tests in `tests/`
+- A GitHub Actions workflow that runs tests, builds the dashboard, and deploys the static site to GitHub Pages
+
+## Recommended Workflow
+
+1. Review the pilot data model and metric definitions in `src/seattle_schools_dashboard/pilot_data.py`.
+2. Replace the synthetic NCES-shaped extract in `src/seattle_schools_dashboard/nces.py` with the live downloader.
+3. Keep raw NCES downloads temporary during the build and only persist compact output files needed by the dashboard.
+4. Expand normalization rules in `src/seattle_schools_dashboard/normalize.py`.
+5. Run `python -m unittest discover -s tests` locally to validate schema and build behavior.
+6. Run `python scripts/build_dashboard.py` to generate the static site.
+7. Push to GitHub to trigger the Pages deployment workflow.
+
+## Starter Project Layout
+
+```text
+.github/workflows/      CI/CD and Pages deployment
+docs/                   Technical specification
+scripts/                Entry points for local and CI builds
+site/                   Generated static output for GitHub Pages
+src/                    Python package for data collection and processing
+tests/                  Unit tests for pipeline behavior
+```
+
+## Assumptions
+
+- The initial dashboard will support district selection and fully synced individual school selection.
+- The frontend will use plain HTML, CSS, and JavaScript with Chart.js.
+- The data pipeline is designed to tolerate NCES schema drift through a canonical field map.
+- The default trend UI should support 5-year and 10-year views in a single chart with a range toggle.
+- The current pilot ships with a synthetic dataset so the end-to-end experience is testable before live NCES ingestion is connected.
+- The production pipeline should save only the minimal processed payload needed for GitHub Pages and plots.
+
+## Local Commands
+
+```bash
+python -m pip install -e .[dev]
+python -m unittest discover -s tests
+python scripts/build_dashboard.py
+```
