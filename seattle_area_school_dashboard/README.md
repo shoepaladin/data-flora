@@ -1,50 +1,64 @@
 # Seattle Area School Dashboard
 
-This repository is a pilot implementation and technical plan for a public school performance dashboard intended for GitHub Pages deployment.
+A static dashboard tracking school performance trends across 11 Puget Sound districts, built on
+public data from NCES and Washington OSPI. Hosted on GitHub Pages; rebuilt automatically every week.
 
-The repository is intentionally designed to avoid committing full raw NCES extracts. Raw source files should be downloaded into a temporary working directory during the build, transformed into a compact dashboard payload, and then discarded.
+## Districts
 
-The project includes:
+Bainbridge Island · Bellevue · Central Kitsap · Issaquah · Lake Washington · Mercer Island ·
+North Kitsap · Renton · Seattle · Snoqualmie Valley · Vashon Island
 
-- A technical specification in [`docs/technical-spec.md`](docs/technical-spec.md)
-- A small Python data pipeline and pilot dataset generator in `src/`
-- Unit tests in `tests/`
-- A GitHub Actions workflow that runs tests, builds the dashboard, and deploys the static site to GitHub Pages
+## Metrics
 
-## Recommended Workflow
+| Metric | Source | Notes |
+|--------|--------|-------|
+| Enrollment | NCES CCD | Student count, adult ed excluded |
+| Demographics | NCES CCD | Race/ethnicity, FRPL share, English learners |
+| ELA Proficiency | OSPI | Share meeting standard |
+| Math Proficiency | OSPI | Share meeting standard |
+| ELA Growth (SGP) | OSPI | Student growth percentile; 50 = typical |
+| Math Growth (SGP) | OSPI | Student growth percentile; 50 = typical |
+| Graduation Rate | OSPI | 4-year cohort, high schools only |
 
-1. Review the pilot data model and metric definitions in `src/seattle_schools_dashboard/pilot_data.py`.
-2. Replace the synthetic NCES-shaped extract in `src/seattle_schools_dashboard/nces.py` with the live downloader.
-3. Keep raw NCES downloads temporary during the build and only persist compact output files needed by the dashboard.
-4. Expand normalization rules in `src/seattle_schools_dashboard/normalize.py`.
-5. Run `python -m unittest discover -s tests` locally to validate schema and build behavior.
-6. Run `python scripts/build_dashboard.py` to generate the static site.
-7. Push to GitHub to trigger the Pages deployment workflow.
+**Known gaps:** Assessment and graduation data are absent for 2019-20 and 2020-21 (COVID —
+statewide testing cancelled). OSPI school name matching uses an 80% token-overlap threshold;
+a small number of schools may be unmatched.
 
-## Starter Project Layout
+## Architecture
 
-```text
-.github/workflows/      CI/CD and Pages deployment
-docs/                   Technical specification
-scripts/                Entry points for local and CI builds
-site/                   Generated static output for GitHub Pages
-src/                    Python package for data collection and processing
-tests/                  Unit tests for pipeline behavior
+```
+NCES CCD API  ─┐
+OSPI Socrata   ─┴─► src/seattle_schools_dashboard/  ─► site/dashboard-data.json
+                         Python pipeline                      │
+                                                        Chart.js frontend
+                                                        site/index.html
 ```
 
-## Assumptions
+The pipeline downloads, normalizes, and joins NCES enrollment/demographics with OSPI assessment,
+graduation, and growth data. A PCA-based composite ranking is computed separately
+(`scripts/generate_pca_report.py`) and output to `site/pca-analysis.html`. Raw NCES downloads
+are temporary and never committed. The `site/` output is rebuilt by CI and not tracked in git.
 
-- The initial dashboard will support district selection and fully synced individual school selection.
-- The frontend will use plain HTML, CSS, and JavaScript with Chart.js.
-- The data pipeline is designed to tolerate NCES schema drift through a canonical field map.
-- The default trend UI should support 5-year and 10-year views in a single chart with a range toggle.
-- The current pilot ships with a synthetic dataset so the end-to-end experience is testable before live NCES ingestion is connected.
-- The production pipeline should save only the minimal processed payload needed for GitHub Pages and plots.
+## Layout
 
-## Local Commands
+```
+.github/workflows/    CI/CD and Pages deployment
+scripts/              Build entry points
+site/                 Generated output (gitignored; rebuilt by CI)
+src/                  Python package — data collection, normalization, rankings
+tests/                Unit tests
+```
+
+## Local development
 
 ```bash
-python -m pip install -e .[dev]
+pip install -e .[dev]
 python -m unittest discover -s tests
-python scripts/build_dashboard.py
+python scripts/build_dashboard.py      # writes to site/
 ```
+
+## Deployment
+
+GitHub Actions (`.github/workflows/build-and-deploy.yml`) runs on push to `main`, on manual
+dispatch, and on a weekly Monday schedule. It runs tests, builds the site, and deploys to
+GitHub Pages.
