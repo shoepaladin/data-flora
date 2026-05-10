@@ -253,7 +253,8 @@ HTML_TEMPLATE = """<!doctype html>
   </style>
 </head>
 <body>
-  <main>
+  <div id="loading" style="text-align:center;padding:80px;font-size:1.1rem;color:#5f6b7a;">Loading dashboard data…</div>
+  <main style="display:none">
     <section class="hero">
       <div>
         <div class="eyebrow">NCES CCD Data</div>
@@ -348,9 +349,12 @@ HTML_TEMPLATE = """<!doctype html>
       </section>
     </div>
   </main>
-  <script id="dashboard-data" type="application/json">__DASHBOARD_DATA__</script>
   <script>
-    const dashboardData = JSON.parse(document.getElementById('dashboard-data').textContent);
+    fetch('./dashboard-data.json')
+      .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json(); })
+      .then(dashboardData => {
+    document.getElementById('loading').style.display = 'none';
+    document.querySelector('main').style.display = '';
     const schoolSearch = document.getElementById('school-search');
     const palette = ['#0f6c74','#c65a1e','#4f7f29','#7d4e9f','#af405b','#3666b0','#8b6f18','#247b5f'];
 
@@ -737,6 +741,10 @@ HTML_TEMPLATE = """<!doctype html>
     function formatAxisValue(value, format) {
       return format === 'percent' ? `${Math.round(value * 100)}%` : Number(value).toLocaleString();
     }
+  })
+  .catch(() => {
+    document.getElementById('loading').textContent = 'Failed to load dashboard data. Please refresh the page.';
+  });
   </script>
 </body>
 </html>
@@ -777,6 +785,6 @@ def build_site(project_root: Path) -> None:
         encoding="utf-8",
     )
     (site_dir / "index.html").write_text(
-        HTML_TEMPLATE.replace("__DASHBOARD_DATA__", json.dumps(dashboard_payload)),
+        HTML_TEMPLATE,
         encoding="utf-8",
     )
