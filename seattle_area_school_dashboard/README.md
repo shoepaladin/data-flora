@@ -1,7 +1,7 @@
 # Seattle Area School Dashboard
 
 A static dashboard tracking school performance trends across 11 Puget Sound districts, built on
-public data from NCES and Washington OSPI. Hosted on GitHub Pages; rebuilt automatically every week.
+public data from National Center for Education Statistics (NCES) and Washington Office of Superintendent of Public Instruction (OSPI). 
 
 ## Districts
 
