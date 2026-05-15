@@ -78,9 +78,26 @@ HTML_TEMPLATE = """<!doctype html>
     }
     .layout {
       display: grid;
-      grid-template-columns: 230px 1fr;
+      grid-template-columns: var(--sidebar-width, 230px) 1fr;
       gap: 16px;
       align-items: start;
+      position: relative;
+    }
+    aside { position: relative; }
+    #resize-handle {
+      position: absolute;
+      top: 0;
+      left: calc(var(--sidebar-width, 230px) + 8px);
+      width: 8px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 10;
+      border-radius: 4px;
+      transition: background 120ms;
+    }
+    #resize-handle:hover,
+    #resize-handle.dragging {
+      background: rgba(15, 108, 116, 0.25);
     }
     .panel, .card { padding: 16px; }
     .main-stack { display: grid; gap: 14px; }
@@ -249,6 +266,7 @@ HTML_TEMPLATE = """<!doctype html>
     @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
       .stats { grid-template-columns: repeat(2,1fr); }
+      #resize-handle { display: none; }
     }
   </style>
 </head>
@@ -305,6 +323,7 @@ HTML_TEMPLATE = """<!doctype html>
           </div>
         </section>
       </aside>
+      <div id="resize-handle"></div>
       <section class="main-stack">
         <section class="panel chart-panel">
           <div class="chart-header">
@@ -480,6 +499,30 @@ HTML_TEMPLATE = """<!doctype html>
     renderDistrictDropdown();
     renderSchools();
     updateView();
+
+    (function () {
+      const handle = document.getElementById('resize-handle');
+      const layout  = handle.closest('.layout');
+      let dragging  = false;
+      handle.addEventListener('mousedown', (e) => {
+        dragging = true;
+        handle.classList.add('dragging');
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const rect     = layout.getBoundingClientRect();
+        const maxWidth = rect.width / 2;
+        const newWidth = Math.min(Math.max(e.clientX - rect.left, 180), maxWidth);
+        layout.style.setProperty('--sidebar-width', newWidth + 'px');
+        handle.style.left = (newWidth + 8) + 'px';
+      });
+      document.addEventListener('mouseup', () => {
+        if (!dragging) return;
+        dragging = false;
+        handle.classList.remove('dragging');
+      });
+    })();
 
     function renderAll() {
       renderDistrictDropdown();
