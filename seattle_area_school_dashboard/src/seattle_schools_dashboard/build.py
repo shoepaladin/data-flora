@@ -54,7 +54,7 @@ HTML_TEMPLATE = """<!doctype html>
     }
     .hero h1 {
       margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
+      font-family: Georgia, \"Times New Roman\", serif;
       font-size: clamp(1.5rem, 2vw, 2.2rem);
     }
     .eyebrow {
@@ -159,7 +159,7 @@ HTML_TEMPLATE = """<!doctype html>
       padding: 2px 0;
       cursor: pointer;
     }
-    .log-row input[type="checkbox"] {
+    .log-row input[type=\"checkbox\"] {
       width: 14px; height: 14px;
       cursor: pointer;
       accent-color: var(--teal);
@@ -178,7 +178,7 @@ HTML_TEMPLATE = """<!doctype html>
       justify-content: space-between;
       user-select: none;
     }
-    details.dropdown > summary::after { content: "▾"; color: var(--muted); }
+    details.dropdown > summary::after { content: \"▾\"; color: var(--muted); }
     details[open].dropdown > summary { border-radius: 9px 9px 0 0; border-bottom-color: transparent; }
     details.dropdown > summary::-webkit-details-marker { display: none; }
     .dropdown-panel {
@@ -200,7 +200,7 @@ HTML_TEMPLATE = """<!doctype html>
       cursor: pointer;
     }
     .chk-row:hover { background: rgba(15,108,116,0.07); }
-    .chk-row input[type="checkbox"] {
+    .chk-row input[type=\"checkbox\"] {
       width: 13px; height: 13px;
       cursor: pointer;
       accent-color: var(--teal);
@@ -271,103 +271,103 @@ HTML_TEMPLATE = """<!doctype html>
   </style>
 </head>
 <body>
-  <div id="loading" style="text-align:center;padding:80px;font-size:1.1rem;color:#5f6b7a;">Loading dashboard data…</div>
-  <main style="display:none">
-    <section class="hero">
+  <div id=\"loading\" style=\"text-align:center;padding:80px;font-size:1.1rem;color:#5f6b7a;\">Loading dashboard data…</div>
+  <main style=\"display:none\">
+    <section class=\"hero\">
       <div>
-        <div class="eyebrow">NCES CCD Data</div>
+        <div class=\"eyebrow\">NCES CCD Data</div>
         <h1>Seattle Area School Dashboard</h1>
       </div>
-      <div class="pill" id="build-meta"></div>
+      <div class=\"pill\" id=\"build-meta\"></div>
     </section>
-    <div class="layout">
+    <div class=\"layout\">
       <aside>
-        <section class="panel">
-          <span class="ctrl-label">Metric</span>
-          <select id="metric-select"></select>
+        <section class=\"panel\">
+          <span class=\"ctrl-label\">Metric</span>
+          <select id=\"metric-select\"></select>
 
-          <span class="ctrl-label">Year range</span>
-          <div style="display:flex;gap:6px;align-items:center;">
-            <select id="start-year-select" style="flex:1"></select>
-            <span style="color:var(--muted);font-size:0.8rem;">to</span>
-            <select id="end-year-select" style="flex:1"></select>
+          <span class=\"ctrl-label\">Year range</span>
+          <div style=\"display:flex;gap:6px;align-items:center;\">
+            <select id=\"start-year-select\" style=\"flex:1\"></select>
+            <span style=\"color:var(--muted);font-size:0.8rem;\">to</span>
+            <select id=\"end-year-select\" style=\"flex:1\"></select>
           </div>
-          <div id="year-range-error" style="display:none;font-size:0.78rem;color:var(--rust);margin-top:4px;"></div>
+          <div id=\"year-range-error\" style=\"display:none;font-size:0.78rem;color:var(--rust);margin-top:4px;\"></div>
 
-          <div id="log-scale-section">
-            <span class="ctrl-label">Scale</span>
-            <label class="log-row">
-              <input type="checkbox" id="log-scale-checkbox"> Log scale
+          <div id=\"log-scale-section\">
+            <span class=\"ctrl-label\">Scale</span>
+            <label class=\"log-row\">
+              <input type=\"checkbox\" id=\"log-scale-checkbox\"> Log scale
             </label>
           </div>
 
-          <span class="ctrl-label">Districts</span>
-          <details class="dropdown" id="district-dropdown">
-            <summary id="district-summary">No districts selected</summary>
-            <div class="dropdown-panel" id="district-panel"></div>
+          <span class=\"ctrl-label\">Districts</span>
+          <details class=\"dropdown\" id=\"district-dropdown\">
+            <summary id=\"district-summary\">No districts selected</summary>
+            <div class=\"dropdown-panel\" id=\"district-panel\"></div>
           </details>
-          <div class="toolbar">
-            <button id="select-all-districts">All</button>
-            <button id="clear-all" class="secondary">Clear</button>
+          <div class=\"toolbar\">
+            <button id=\"select-all-districts\">All</button>
+            <button id=\"clear-all\" class=\"secondary\">Clear</button>
           </div>
 
-          <span class="ctrl-label">School level</span>
-          <div class="level-filter" id="level-filter"></div>
+          <span class=\"ctrl-label\">School level</span>
+          <div class=\"level-filter\" id=\"level-filter\"></div>
 
-          <span class="ctrl-label">Schools <span id="school-count-label" style="font-weight:400;text-transform:none;letter-spacing:0;"></span></span>
-          <input id="school-search" class="search-input" type="search" placeholder="Search…">
-          <div id="schools" class="school-list"></div>
-          <div class="toolbar">
-            <button id="select-visible-schools">All</button>
-            <button id="clear-visible-schools" class="secondary">Clear</button>
+          <span class=\"ctrl-label\">Schools <span id=\"school-count-label\" style=\"font-weight:400;text-transform:none;letter-spacing:0;\"></span></span>
+          <input id=\"school-search\" class=\"search-input\" type=\"search\" placeholder=\"Search…\">
+          <div id=\"schools\" class=\"school-list\"></div>
+          <div class=\"toolbar\">
+            <button id=\"select-visible-schools\">All</button>
+            <button id=\"clear-visible-schools\" class=\"secondary\">Clear</button>
           </div>
         </section>
       </aside>
-      <div id="resize-handle"></div>
-      <section class="main-stack">
-        <section class="panel chart-panel">
-          <div class="chart-header">
+      <div id=\"resize-handle\"></div>
+      <section class=\"main-stack\">
+        <section class=\"panel chart-panel\">
+          <div class=\"chart-header\">
             <div>
-              <h2 id="chart-title"></h2>
-              <div class="chart-desc" id="chart-description"></div>
+              <h2 id=\"chart-title\"></h2>
+              <div class=\"chart-desc\" id=\"chart-description\"></div>
             </div>
           </div>
-          <div class="chart-wrap">
-            <canvas id="trendChart"></canvas>
+          <div class=\"chart-wrap\">
+            <canvas id=\"trendChart\"></canvas>
           </div>
-          <div class="footnote" id="chart-note"></div>
+          <div class=\"footnote\" id=\"chart-note\"></div>
         </section>
-        <section class="card stats">
+        <section class=\"card stats\">
           <article>
-            <div class="card-label">Selected districts</div>
-            <div class="card-value" id="selected-districts-value">0</div>
-            <div class="caption" id="selected-districts-caption"></div>
+            <div class=\"card-label\">Selected districts</div>
+            <div class=\"card-value\" id=\"selected-districts-value\">0</div>
+            <div class=\"caption\" id=\"selected-districts-caption\"></div>
           </article>
           <article>
-            <div class="card-label">Selected schools</div>
-            <div class="card-value" id="selected-schools-value">0</div>
-            <div class="caption" id="selected-schools-caption"></div>
+            <div class=\"card-label\">Selected schools</div>
+            <div class=\"card-value\" id=\"selected-schools-value\">0</div>
+            <div class=\"caption\" id=\"selected-schools-caption\"></div>
           </article>
           <article>
-            <div class="card-label">Current-year average</div>
-            <div class="card-value" id="average-value">--</div>
-            <div class="caption" id="average-caption"></div>
+            <div class=\"card-label\">Current-year average</div>
+            <div class=\"card-value\" id=\"average-value\">--</div>
+            <div class=\"caption\" id=\"average-caption\"></div>
           </article>
           <article>
-            <div class="card-label">Coverage</div>
-            <div class="card-value" id="coverage-value">--</div>
-            <div class="caption" id="coverage-caption"></div>
+            <div class=\"card-label\">Coverage</div>
+            <div class=\"card-value\" id=\"coverage-value\">--</div>
+            <div class=\"caption\" id=\"coverage-caption\"></div>
           </article>
         </section>
-        <section class="panel chart-panel">
-          <div class="chart-header">
+        <section class=\"panel chart-panel\">
+          <div class=\"chart-header\">
             <div>
-              <h2 id="avg-chart-title"></h2>
-              <div class="chart-desc" id="avg-chart-description"></div>
+              <h2 id=\"avg-chart-title\"></h2>
+              <div class=\"chart-desc\" id=\"avg-chart-description\"></div>
             </div>
           </div>
-          <div class="chart-wrap" style="height:220px;">
-            <canvas id="avgChart"></canvas>
+          <div class=\"chart-wrap\" style=\"height:220px;\">
+            <canvas id=\"avgChart\"></canvas>
           </div>
         </section>
       </section>
@@ -389,8 +389,6 @@ HTML_TEMPLATE = """<!doctype html>
       return acc;
     }, {});
 
-    // selectedDistrictIds controls which schools are visible in the list.
-    // selectedSchoolIds controls what gets plotted. These are independent.
     const initialDistrictIds = new Set(
       dashboardData.schools
         .filter((s) => dashboardData.initial_state.selected_school_ids.includes(s.id))
@@ -516,6 +514,8 @@ HTML_TEMPLATE = """<!doctype html>
         const newWidth = Math.min(Math.max(e.clientX - rect.left, 180), maxWidth);
         layout.style.setProperty('--sidebar-width', newWidth + 'px');
         handle.style.left = (newWidth + 8) + 'px';
+        chart.resize();
+        avgChart.resize();
       });
       document.addEventListener('mouseup', () => {
         if (!dragging) return;
@@ -609,7 +609,7 @@ HTML_TEMPLATE = """<!doctype html>
       const visible = getVisibleSchools();
       document.getElementById('school-count-label').textContent = visible.length ? `(${visible.length})` : '';
       if (!visible.length) {
-        container.innerHTML = '<div class="empty-state">Select a district to see schools.</div>';
+        container.innerHTML = '<div class=\"empty-state\">Select a district to see schools.</div>';
         return;
       }
       visible.forEach((school) => {
