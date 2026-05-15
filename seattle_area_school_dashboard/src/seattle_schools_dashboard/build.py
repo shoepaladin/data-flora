@@ -269,7 +269,12 @@ HTML_TEMPLATE = """<!doctype html>
           <select id="metric-select"></select>
 
           <span class="ctrl-label">Year range</span>
-          <div class="toggle" id="range-toggle"></div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <select id="start-year-select" style="flex:1"></select>
+            <span style="color:var(--muted);font-size:0.8rem;">to</span>
+            <select id="end-year-select" style="flex:1"></select>
+          </div>
+          <div id="year-range-error" style="display:none;font-size:0.78rem;color:var(--rust);margin-top:4px;"></div>
 
           <div id="log-scale-section">
             <span class="ctrl-label">Scale</span>
@@ -378,7 +383,8 @@ HTML_TEMPLATE = """<!doctype html>
       selectedSchoolIds: new Set(dashboardData.initial_state.selected_school_ids),
       selectedLevels: new Set(ALL_LEVELS),
       metricKey: dashboardData.initial_state.metric_key,
-      yearWindow: dashboardData.initial_state.year_window,
+      startYear: dashboardData.initial_state.start_year,
+      endYear:   dashboardData.initial_state.end_year,
       logScale: false,
       schoolSearch: '',
     };
@@ -469,7 +475,7 @@ HTML_TEMPLATE = """<!doctype html>
     });
 
     renderMetricSelect();
-    renderRangeToggle();
+    renderYearSelects();
     renderLevelFilter();
     renderDistrictDropdown();
     renderSchools();
@@ -507,16 +513,21 @@ HTML_TEMPLATE = """<!doctype html>
       });
     }
 
-    function renderRangeToggle() {
-      const container = document.getElementById('range-toggle');
-      container.innerHTML = '';
-      [5, 10].forEach((w) => {
-        const btn = document.createElement('button');
-        btn.className = state.yearWindow === w ? 'active' : 'ghost';
-        btn.textContent = `${w}-yr`;
-        btn.addEventListener('click', () => { state.yearWindow = w; renderRangeToggle(); updateView(); });
-        container.appendChild(btn);
+    function renderYearSelects() {
+      const startSel = document.getElementById('start-year-select');
+      const endSel   = document.getElementById('end-year-select');
+      [startSel, endSel].forEach(sel => {
+        sel.innerHTML = '';
+        dashboardData.years.forEach(yr => {
+          const opt = document.createElement('option');
+          opt.value = opt.textContent = yr;
+          sel.appendChild(opt);
+        });
       });
+      startSel.value = state.startYear;
+      endSel.value   = state.endYear;
+      startSel.addEventListener('change', e => { state.startYear = e.target.value; updateView(); });
+      endSel.addEventListener('change',   e => { state.endYear   = e.target.value; updateView(); });
     }
 
     function renderDistrictDropdown() {
@@ -578,6 +589,25 @@ HTML_TEMPLATE = """<!doctype html>
     }
 
     function updateView() {
+      const errEl = document.getElementById('year-range-error');
+      const startIdx = dashboardData.years.indexOf(state.startYear);
+      const endIdx   = dashboardData.years.indexOf(state.endYear);
+      if (startIdx > endIdx) {
+        errEl.textContent = 'Start year must be before end year.';
+        errEl.style.display = '';
+        return;
+      }
+      const yearsInRange = dashboardData.years.slice(startIdx, endIdx + 1);
+      const hasData = Array.from(state.selectedSchoolIds).some(id =>
+        yearsInRange.some(yr => recordsBySchool[id]?.[yr] !== undefined)
+      );
+      if (!hasData && state.selectedSchoolIds.size > 0) {
+        errEl.textContent = 'No data available for the selected schools and year range.';
+        errEl.style.display = '';
+        return;
+      }
+      errEl.style.display = 'none';
+
       const def = dashboardData.metrics[state.metricKey];
       document.getElementById('chart-title').textContent = def.label;
       document.getElementById('chart-description').textContent = def.description;
@@ -591,7 +621,7 @@ HTML_TEMPLATE = """<!doctype html>
 
     function updateAverageChart(def) {
       const isEnrollment = state.metricKey === 'enrollment';
-      const years = dashboardData.years.slice(-state.yearWindow);
+      const years = dashboardData.years.slice(dashboardData.years.indexOf(state.startYear), dashboardData.years.indexOf(state.endYear) + 1);
       const useLog = state.logScale && def.format === 'integer';
 
       const data = years.map((yr) => {
@@ -669,7 +699,7 @@ HTML_TEMPLATE = """<!doctype html>
       const schoolIds = Array.from(state.selectedSchoolIds)
         .sort((a, b) => schoolById[a].name.localeCompare(schoolById[b].name))
         .slice(0, 8);
-      const years = dashboardData.years.slice(-state.yearWindow);
+      const years = dashboardData.years.slice(dashboardData.years.indexOf(state.startYear), dashboardData.years.indexOf(state.endYear) + 1);
       const useLog = state.logScale && def.format === 'integer';
 
       chart.options.scales.y.type = useLog ? 'logarithmic' : 'linear';
@@ -776,7 +806,8 @@ def build_site(project_root: Path) -> None:
         "initial_state": {
             "selected_school_ids": initial_school_ids,
             "metric_key": "enrollment",
-            "year_window": 10,
+            "start_year": nces_payload["years"][0],
+            "end_year":   nces_payload["years"][-1],
         },
     }
 
