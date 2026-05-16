@@ -4,3 +4,5 @@
 
 # data-flora
 Collection of fun empirical data projects
+
+Seattle School dashboard: https://shoepaladin.github.io/data-flora/
