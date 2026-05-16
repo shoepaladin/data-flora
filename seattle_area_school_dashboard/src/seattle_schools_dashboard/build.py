@@ -336,6 +336,7 @@ HTML_TEMPLATE = """<!doctype html>
             <canvas id=\"trendChart\"></canvas>
           </div>
           <div class=\"footnote\" id=\"chart-note\"></div>
+          <div id=\"caveat-banner\" style=\"display:none;margin-top:8px;padding:7px 12px;border-radius:8px;background:rgba(198,90,30,0.10);border:1px solid rgba(198,90,30,0.25);font-size:0.8rem;color:#7a3810;\"></div>
         </section>
         <section class=\"card stats\">
           <article>
@@ -657,6 +658,20 @@ HTML_TEMPLATE = """<!doctype html>
       const logSection = document.getElementById('log-scale-section');
       logSection.style.display = def.format === 'integer' ? '' : 'none';
       document.getElementById('log-scale-checkbox').checked = state.logScale;
+
+      const caveatBanner = document.getElementById('caveat-banner');
+      const caveats = def.caveat_years || {};
+      const startIdx = dashboardData.years.indexOf(state.startYear);
+      const endIdx   = dashboardData.years.indexOf(state.endYear);
+      const activeYears = endIdx >= startIdx ? dashboardData.years.slice(startIdx, endIdx + 1) : [];
+      const activeCaveats = activeYears.filter(yr => caveats[yr]).map(yr => `${yr}: ${caveats[yr]}`);
+      if (activeCaveats.length) {
+        caveatBanner.textContent = '⚠ ' + activeCaveats.join(' · ');
+        caveatBanner.style.display = '';
+      } else {
+        caveatBanner.style.display = 'none';
+      }
+
       updateSummaryCards(def);
       updateChart(def);
       updateAverageChart(def);

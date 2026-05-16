@@ -161,13 +161,15 @@ METRIC_DEFINITIONS = {
         "label": "ELA proficiency",
         "category": "Assessment",
         "format": "percent",
-        "description": "Share of tested students meeting or exceeding standard on the Smarter Balanced ELA assessment (OSPI). 2019-20 statewide testing was cancelled (COVID); 2020-21 had low participation.",
+        "description": "Share of tested students meeting or exceeding standard on the Smarter Balanced ELA assessment (OSPI). 2019-20 statewide testing was cancelled (COVID). 2020-21 statewide participation was ~54% — well below the 95% federal threshold — so individual school values may not be representative. OSPI changed the reporting label from 'percent met standard' to 'percent consistent grade-level knowledge' in 2022-23; the underlying Smarter Balanced cut scores are unchanged.",
+        "caveat_years": {"2020-2021": "Low test participation (~54% statewide). Values may not be representative."},
     },
     "math_proficiency_rate": {
         "label": "Math proficiency",
         "category": "Assessment",
         "format": "percent",
-        "description": "Share of tested students meeting or exceeding standard on the Smarter Balanced Math assessment (OSPI). 2019-20 statewide testing was cancelled (COVID); 2020-21 had low participation.",
+        "description": "Share of tested students meeting or exceeding standard on the Smarter Balanced Math assessment (OSPI). 2019-20 statewide testing was cancelled (COVID). 2020-21 statewide participation was ~54% — well below the 95% federal threshold — so individual school values may not be representative. OSPI changed the reporting label from 'percent met standard' to 'percent consistent grade-level knowledge' in 2022-23; the underlying Smarter Balanced cut scores are unchanged.",
+        "caveat_years": {"2020-2021": "Low test participation (~54% statewide). Values may not be representative."},
     },
     "four_year_grad_rate": {
         "label": "4-yr graduation rate",
