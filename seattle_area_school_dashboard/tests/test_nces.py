@@ -184,6 +184,46 @@ class NcesAggregationTests(unittest.TestCase):
         self.assertEqual(record["sex_counts"]["female_share"], 47)
         self.assertEqual(record["sex_counts"]["sex_not_specified_share"], 2)
 
+    def test_wide_standalone_sex_totals_preferred_over_race_x_sex(self) -> None:
+        # TOTM=55, TOTF=45 should win over the race×sex intersection sums.
+        # A student with unknown race is in TOTM but not in any WHALM/BLALM/etc.,
+        # so TOTM gives the more accurate male count.
+        record = make_school_year_record("123")
+        apply_wide_membership_row(
+            record,
+            {
+                "MEMBER": "100",
+                "AM": "0", "AS": "0", "BL": "10", "HI": "0", "HP": "0", "TR": "0", "WH": "80",
+                # Race×sex sums would give male=45, female=45 (10 unspecified-race students missing)
+                "AMALM": "0", "ASALM": "0", "BLALM": "5", "HIALM": "0", "HPALM": "0", "TRALM": "0", "WHALM": "40",
+                "AMALF": "0", "ASALF": "0", "BLALF": "5", "HIALF": "0", "HPALF": "0", "TRALF": "0", "WHALF": "40",
+                # Standalone totals correctly account for the 10 unspecified-race students
+                "TOTM": "55",
+                "TOTF": "45",
+            },
+        )
+        self.assertEqual(record["sex_counts"]["male_share"], 55)
+        self.assertEqual(record["sex_counts"]["female_share"], 45)
+        self.assertEqual(record["sex_counts"]["sex_not_specified_share"], 0)
+
+    def test_wide_sex_falls_back_to_race_x_sex_when_no_standalone(self) -> None:
+        # Without TOTM/TOTF, the race×sex intersection sums are used and the 10
+        # students with unknown race inflate sex_not_specified_share.
+        record = make_school_year_record("123")
+        apply_wide_membership_row(
+            record,
+            {
+                "MEMBER": "100",
+                "AM": "0", "AS": "0", "BL": "10", "HI": "0", "HP": "0", "TR": "0", "WH": "80",
+                "AMALM": "0", "ASALM": "0", "BLALM": "5", "HIALM": "0", "HPALM": "0", "TRALM": "0", "WHALM": "40",
+                "AMALF": "0", "ASALF": "0", "BLALF": "5", "HIALF": "0", "HPALF": "0", "TRALF": "0", "WHALF": "40",
+                # No TOTM / TOTF
+            },
+        )
+        self.assertEqual(record["sex_counts"]["male_share"], 45)
+        self.assertEqual(record["sex_counts"]["female_share"], 45)
+        self.assertEqual(record["sex_counts"]["sex_not_specified_share"], 10)
+
     def test_is_open_school_accepts_updated_or_sy_status(self) -> None:
         self.assertTrue(is_open_school({"UPDATED_STATUS_TEXT": "Open", "SY_STATUS_TEXT": "Closed"}))
         self.assertTrue(is_open_school({"UPDATED_STATUS_TEXT": "Closed", "SY_STATUS_TEXT": "Open"}))

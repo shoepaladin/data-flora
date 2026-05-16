@@ -41,6 +41,16 @@ WIDE_RACE_COLUMN_MAP = {
     "WH": "white_share",
 }
 
+# Standalone sex-total columns published in some NCES wide-format years.
+# When present these are preferred because they include students of unspecified race.
+# Column names are unconfirmed; treated as optional — missing columns fall back to
+# the race×sex intersection sums below.
+WIDE_MALE_TOTAL_COLUMNS = ("TOTM",)
+WIDE_FEMALE_TOTAL_COLUMNS = ("TOTF",)
+
+# Race×sex intersection columns — male and female counts per identified race group.
+# Used when standalone sex totals are absent; students with unspecified race are not
+# captured here and will inflate sex_not_specified_share as a residual.
 WIDE_MALE_COLUMNS = ("AMALM", "ASALM", "BLALM", "HIALM", "HPALM", "TRALM", "WHALM")
 WIDE_FEMALE_COLUMNS = ("AMALF", "ASALF", "BLALF", "HIALF", "HPALF", "TRALF", "WHALF")
 LEGACY_SCHOOL_LEVEL_MAP = {
@@ -448,8 +458,22 @@ def apply_wide_membership_row(record: dict[str, object], row: dict[str, str]) ->
         record["race_counts"][metric_key] = count
         known_race_total += count
 
-    male_total = sum((_safe_int(row.get(column)) or 0) for column in WIDE_MALE_COLUMNS)
-    female_total = sum((_safe_int(row.get(column)) or 0) for column in WIDE_FEMALE_COLUMNS)
+    # Prefer standalone sex totals (include all-race students); fall back to
+    # summing race×sex intersections (excludes students with unspecified race).
+    male_standalone = next(
+        (_safe_int(row.get(col)) for col in WIDE_MALE_TOTAL_COLUMNS if _safe_int(row.get(col)) is not None),
+        None,
+    )
+    female_standalone = next(
+        (_safe_int(row.get(col)) for col in WIDE_FEMALE_TOTAL_COLUMNS if _safe_int(row.get(col)) is not None),
+        None,
+    )
+    male_total = male_standalone if male_standalone is not None else sum(
+        (_safe_int(row.get(column)) or 0) for column in WIDE_MALE_COLUMNS
+    )
+    female_total = female_standalone if female_standalone is not None else sum(
+        (_safe_int(row.get(column)) or 0) for column in WIDE_FEMALE_COLUMNS
+    )
     record["sex_counts"]["female_share"] = female_total
     record["sex_counts"]["male_share"] = male_total
     record["race_counts"]["race_not_specified_share"] = max(enrollment - known_race_total, 0)
