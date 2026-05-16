@@ -71,9 +71,26 @@
     }
     .layout {
       display: grid;
-      grid-template-columns: 230px 1fr;
+      grid-template-columns: var(--sidebar-width, 230px) 1fr;
       gap: 16px;
       align-items: start;
+      position: relative;
+    }
+    aside { position: relative; }
+    #resize-handle {
+      position: absolute;
+      top: 0;
+      left: calc(var(--sidebar-width, 230px) + 8px);
+      width: 8px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 10;
+      border-radius: 4px;
+      transition: background 120ms;
+    }
+    #resize-handle:hover,
+    #resize-handle.dragging {
+      background: rgba(15, 108, 116, 0.25);
     }
     .panel, .card { padding: 16px; }
     .main-stack { display: grid; gap: 14px; }
@@ -242,6 +259,7 @@
     @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
       .stats { grid-template-columns: repeat(2,1fr); }
+      #resize-handle { display: none; }
     }
   </style>
 </head>
@@ -262,7 +280,12 @@
           <select id="metric-select"></select>
 
           <span class="ctrl-label">Year range</span>
-          <div class="toggle" id="range-toggle"></div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <select id="start-year-select" style="flex:1"></select>
+            <span style="color:var(--muted);font-size:0.8rem;">to</span>
+            <select id="end-year-select" style="flex:1"></select>
+          </div>
+          <div id="year-range-error" style="display:none;font-size:0.78rem;color:var(--rust);margin-top:4px;"></div>
 
           <div id="log-scale-section">
             <span class="ctrl-label">Scale</span>
@@ -293,6 +316,7 @@
           </div>
         </section>
       </aside>
+      <div id="resize-handle"></div>
       <section class="main-stack">
         <section class="panel chart-panel">
           <div class="chart-header">
@@ -305,6 +329,7 @@
             <canvas id="trendChart"></canvas>
           </div>
           <div class="footnote" id="chart-note"></div>
+          <div id="caveat-banner" style="display:none;margin-top:8px;padding:7px 12px;border-radius:8px;background:rgba(198,90,30,0.10);border:1px solid rgba(198,90,30,0.25);font-size:0.8rem;color:#7a3810;"></div>
         </section>
         <section class="card stats">
           <article>
@@ -358,8 +383,6 @@
       return acc;
     }, {});
 
-    // selectedDistrictIds controls which schools are visible in the list.
-    // selectedSchoolIds controls what gets plotted. These are independent.
     const initialDistrictIds = new Set(
       dashboardData.schools
         .filter((s) => dashboardData.initial_state.selected_school_ids.includes(s.id))
@@ -371,7 +394,8 @@
       selectedSchoolIds: new Set(dashboardData.initial_state.selected_school_ids),
       selectedLevels: new Set(ALL_LEVELS),
       metricKey: dashboardData.initial_state.metric_key,
-      yearWindow: dashboardData.initial_state.year_window,
+      startYear: dashboardData.initial_state.start_year,
+      endYear:   dashboardData.initial_state.end_year,
       logScale: false,
       schoolSearch: '',
     };
@@ -462,11 +486,37 @@
     });
 
     renderMetricSelect();
-    renderRangeToggle();
+    renderYearSelects();
     renderLevelFilter();
     renderDistrictDropdown();
     renderSchools();
     updateView();
+
+    (function () {
+      const handle = document.getElementById('resize-handle');
+      const layout  = handle.closest('.layout');
+      let dragging  = false;
+      handle.addEventListener('mousedown', (e) => {
+        dragging = true;
+        handle.classList.add('dragging');
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const rect     = layout.getBoundingClientRect();
+        const maxWidth = rect.width / 2;
+        const newWidth = Math.min(Math.max(e.clientX - rect.left, 180), maxWidth);
+        layout.style.setProperty('--sidebar-width', newWidth + 'px');
+        handle.style.left = (newWidth + 8) + 'px';
+        chart.resize();
+        avgChart.resize();
+      });
+      document.addEventListener('mouseup', () => {
+        if (!dragging) return;
+        dragging = false;
+        handle.classList.remove('dragging');
+      });
+    })();
 
     function renderAll() {
       renderDistrictDropdown();
@@ -500,16 +550,21 @@
       });
     }
 
-    function renderRangeToggle() {
-      const container = document.getElementById('range-toggle');
-      container.innerHTML = '';
-      [5, 10].forEach((w) => {
-        const btn = document.createElement('button');
-        btn.className = state.yearWindow === w ? 'active' : 'ghost';
-        btn.textContent = `${w}-yr`;
-        btn.addEventListener('click', () => { state.yearWindow = w; renderRangeToggle(); updateView(); });
-        container.appendChild(btn);
+    function renderYearSelects() {
+      const startSel = document.getElementById('start-year-select');
+      const endSel   = document.getElementById('end-year-select');
+      [startSel, endSel].forEach(sel => {
+        sel.innerHTML = '';
+        dashboardData.years.forEach(yr => {
+          const opt = document.createElement('option');
+          opt.value = opt.textContent = yr;
+          sel.appendChild(opt);
+        });
       });
+      startSel.value = state.startYear;
+      endSel.value   = state.endYear;
+      startSel.addEventListener('change', e => { state.startYear = e.target.value; updateView(); });
+      endSel.addEventListener('change',   e => { state.endYear   = e.target.value; updateView(); });
     }
 
     function renderDistrictDropdown() {
@@ -571,12 +626,45 @@
     }
 
     function updateView() {
+      const errEl = document.getElementById('year-range-error');
+      const startIdx = dashboardData.years.indexOf(state.startYear);
+      const endIdx   = dashboardData.years.indexOf(state.endYear);
+      if (startIdx > endIdx) {
+        errEl.textContent = 'Start year must be before end year.';
+        errEl.style.display = '';
+        return;
+      }
+      const yearsInRange = dashboardData.years.slice(startIdx, endIdx + 1);
+      const hasData = Array.from(state.selectedSchoolIds).some(id =>
+        yearsInRange.some(yr => recordsBySchool[id]?.[yr] !== undefined)
+      );
+      if (!hasData && state.selectedSchoolIds.size > 0) {
+        errEl.textContent = 'No data available for the selected schools and year range.';
+        errEl.style.display = '';
+        return;
+      }
+      errEl.style.display = 'none';
+
       const def = dashboardData.metrics[state.metricKey];
       document.getElementById('chart-title').textContent = def.label;
       document.getElementById('chart-description').textContent = def.description;
       const logSection = document.getElementById('log-scale-section');
       logSection.style.display = def.format === 'integer' ? '' : 'none';
       document.getElementById('log-scale-checkbox').checked = state.logScale;
+
+      const caveatBanner = document.getElementById('caveat-banner');
+      const caveats = def.caveat_years || {};
+      const startIdx = dashboardData.years.indexOf(state.startYear);
+      const endIdx   = dashboardData.years.indexOf(state.endYear);
+      const activeYears = endIdx >= startIdx ? dashboardData.years.slice(startIdx, endIdx + 1) : [];
+      const activeCaveats = activeYears.filter(yr => caveats[yr]).map(yr => `${yr}: ${caveats[yr]}`);
+      if (activeCaveats.length) {
+        caveatBanner.textContent = '⚠ ' + activeCaveats.join(' · ');
+        caveatBanner.style.display = '';
+      } else {
+        caveatBanner.style.display = 'none';
+      }
+
       updateSummaryCards(def);
       updateChart(def);
       updateAverageChart(def);
@@ -584,7 +672,7 @@
 
     function updateAverageChart(def) {
       const isEnrollment = state.metricKey === 'enrollment';
-      const years = dashboardData.years.slice(-state.yearWindow);
+      const years = dashboardData.years.slice(dashboardData.years.indexOf(state.startYear), dashboardData.years.indexOf(state.endYear) + 1);
       const useLog = state.logScale && def.format === 'integer';
 
       const data = years.map((yr) => {
@@ -662,7 +750,7 @@
       const schoolIds = Array.from(state.selectedSchoolIds)
         .sort((a, b) => schoolById[a].name.localeCompare(schoolById[b].name))
         .slice(0, 8);
-      const years = dashboardData.years.slice(-state.yearWindow);
+      const years = dashboardData.years.slice(dashboardData.years.indexOf(state.startYear), dashboardData.years.indexOf(state.endYear) + 1);
       const useLog = state.logScale && def.format === 'integer';
 
       chart.options.scales.y.type = useLog ? 'logarithmic' : 'linear';
