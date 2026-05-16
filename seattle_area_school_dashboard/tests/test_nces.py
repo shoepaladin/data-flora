@@ -12,7 +12,9 @@ from seattle_schools_dashboard.nces import (
     apply_wide_membership_row,
     finalize_records,
     is_open_school,
+    make_school_year_record,
     normalize_school_level,
+    read_membership,
     safe_share,
 )
 
@@ -196,6 +198,60 @@ class NcesAggregationTests(unittest.TestCase):
         self.assertEqual(normalize_school_level("1"), "Elementary")
         self.assertEqual(normalize_school_level("3"), "High")
         self.assertEqual(normalize_school_level("N"), "Other")
+
+
+class MembershipSchemaRoutingTests(unittest.TestCase):
+    """Ensure read_membership routes to the wide path when MEMBER is present,
+    even if TOTAL_INDICATOR is also in the schema (2017-18 / 2021-22 pattern)."""
+
+    def _make_csv(self, rows: list[dict], tmp_path: Path) -> Path:
+        import csv
+        path = tmp_path / "membership.csv"
+        with path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+            writer.writeheader()
+            writer.writerows(rows)
+        return path
+
+    def setUp(self):
+        import tempfile
+        self._tmp = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self._tmp)
+
+    def test_wide_path_taken_when_member_present_alongside_total_indicator(self):
+        # Simulates the 2017-18 / 2021-22 schema: both MEMBER and TOTAL_INDICATOR exist.
+        # The wide path must win so enrollment is populated.
+        rows = [{
+            "NCESSCH": "SCHOOL1",
+            "MEMBER": "500",
+            "TOTAL_INDICATOR": "Some Other Value",
+            "AM": "5", "AS": "50", "BL": "40", "HI": "80", "HP": "5", "TR": "20", "WH": "290",
+            "AMALM": "2", "ASALM": "25", "BLALM": "20", "HIALM": "40", "HPALM": "2", "TRALM": "10", "WHALM": "145",
+            "AMALF": "3", "ASALF": "25", "BLALF": "20", "HIALF": "40", "HPALF": "3", "TRALF": "10", "WHALF": "145",
+        }]
+        csv_path = self._make_csv(rows, self._tmp)
+        result = read_membership(csv_path, {"SCHOOL1"})
+        self.assertIsNotNone(result["SCHOOL1"]["enrollment"], "enrollment must not be None")
+        self.assertEqual(result["SCHOOL1"]["enrollment"], 500)
+
+    def test_legacy_path_taken_when_only_total_indicator_present(self):
+        # 2015-16 style: no MEMBER column.
+        rows = [
+            {
+                "NCESSCH": "SCHOOL1",
+                "TOTAL_INDICATOR": DERIVED_TOTAL_MINUS_ADULT,
+                "GRADE": "No Category Codes",
+                "RACE_ETHNICITY": "No Category Codes",
+                "SEX": "No Category Codes",
+                "STUDENT_COUNT": "200",
+            },
+        ]
+        csv_path = self._make_csv(rows, self._tmp)
+        result = read_membership(csv_path, {"SCHOOL1"})
+        self.assertEqual(result["SCHOOL1"]["enrollment"], 200)
 
 
 if __name__ == "__main__":

@@ -385,10 +385,12 @@ def read_membership(csv_path: Path, selected_school_ids: set[str]) -> dict[str, 
             continue
 
         record = school_year_records.setdefault(school_id, make_school_year_record(school_id))
-        if "TOTAL_INDICATOR" in row:
-            apply_membership_row(record, row)
-        else:
+        # Some NCES years (e.g. 2017-18, 2021-22) carry TOTAL_INDICATOR in the schema
+        # alongside MEMBER; checking MEMBER first ensures those files use the wide path.
+        if "MEMBER" in row:
             apply_wide_membership_row(record, row)
+        elif "TOTAL_INDICATOR" in row:
+            apply_membership_row(record, row)
 
     return school_year_records
 
