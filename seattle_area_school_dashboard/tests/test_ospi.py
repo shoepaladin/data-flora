@@ -136,6 +136,23 @@ class SchemaVersionDetectionTests(unittest.TestCase):
         row = {"percentmetstandard": "*"}
         self.assertIsNone(_proficiency_value(row))
 
+    def test_empty_string_column_falls_through_to_2024_25(self):
+        # Column exists in schema but is empty (Socrata backward-compat export).
+        # Must fall through to percent_consistent_grade, not return None.
+        row = {
+            "percent_consistent_grade_level_knowledge_and_above": "",
+            "percent_consistent_grade": "58.7%",
+        }
+        self.assertAlmostEqual(_proficiency_value(row), 0.587)
+
+    def test_empty_string_column_falls_through_to_old_schema(self):
+        row = {
+            "percent_consistent_grade_level_knowledge_and_above": "",
+            "percent_consistent_grade": "",
+            "percentmetstandard": "45.0%",
+        }
+        self.assertAlmostEqual(_proficiency_value(row), 0.45)
+
 
 class JoinTests(unittest.TestCase):
     def _make_schools(self):

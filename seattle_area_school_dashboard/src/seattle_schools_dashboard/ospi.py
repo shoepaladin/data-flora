@@ -99,11 +99,11 @@ def _parse_sgp(raw: str, datreason: str = "") -> int | None:
 def _proficiency_value(row: dict[str, str]) -> float | None:
     # 2022-23 schema
     raw = row.get("percent_consistent_grade_level_knowledge_and_above")
-    # 2024-25 schema (column renamed)
-    if raw is None:
+    # 2024-25 schema (column renamed); fall through if earlier column is absent or empty
+    if not raw:
         raw = row.get("percent_consistent_grade")
     # pre-2022-23 schema
-    if raw is None:
+    if not raw:
         raw = row.get("percentmetstandard")
     return _parse_pct_string(raw)
 
