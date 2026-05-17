@@ -678,10 +678,7 @@ HTML_TEMPLATE = """<!doctype html>
 
       const caveatBanner = document.getElementById('caveat-banner');
       const caveats = def.caveat_years || {};
-      const startIdx = dashboardData.years.indexOf(state.startYear);
-      const endIdx   = dashboardData.years.indexOf(state.endYear);
-      const activeYears = endIdx >= startIdx ? dashboardData.years.slice(startIdx, endIdx + 1) : [];
-      const activeCaveats = activeYears.filter(yr => caveats[yr]).map(yr => `${yr}: ${caveats[yr]}`);
+      const activeCaveats = yearsInRange.filter(yr => caveats[yr]).map(yr => `${yr}: ${caveats[yr]}`);
       if (activeCaveats.length) {
         caveatBanner.textContent = '⚠ ' + activeCaveats.join(' · ');
         caveatBanner.style.display = '';
