@@ -82,7 +82,10 @@ HTML_TEMPLATE = """<!doctype html>
       gap: 16px;
       align-items: start;
       position: relative;
+      width: 100%;
+      overflow: hidden;
     }
+    .layout > * { min-width: 0; }
     aside { position: relative; }
     #resize-handle {
       position: absolute;
