@@ -747,7 +747,7 @@
           if (isEnrollment) { sumW += val; sumE += 1; }
           else { if (!enroll) continue; sumW += val * enroll; sumE += enroll; }
         }
-        return sumE ? (isEnrollment ? sumW : sumW / sumE) : null;
+        return sumE ? sumW / sumE : null;
       }
 
       function hexToRgba(hex, alpha) {
