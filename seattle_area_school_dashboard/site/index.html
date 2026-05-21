@@ -165,27 +165,29 @@
 
     /* Search results */
     .search-results {
-      max-height: 240px;
-      overflow-y: auto;
-      display: grid;
-      gap: 2px;
-      margin-top: 5px;
+      margin-top: 7px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.96);
+      box-shadow: 0 4px 18px rgba(27,35,48,0.10);
+      overflow: hidden;
     }
     .search-result-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 8px;
-      border-radius: 7px;
-      font-size: 0.82rem;
+      gap: 10px;
+      padding: 11px 13px;
+      min-height: 48px;
+      font-size: 0.86rem;
       cursor: pointer;
-      background: rgba(255,255,255,0.55);
+      border-bottom: 1px solid rgba(27,35,48,0.06);
       transition: background 100ms;
       user-select: none;
     }
-    .search-result-row:hover { background: rgba(15,108,116,0.09); }
+    .search-result-row:last-child { border-bottom: none; }
+    .search-result-row:hover, .search-result-row:active { background: rgba(15,108,116,0.08); }
     .search-result-row.already-selected {
-      opacity: 0.4;
+      opacity: 0.38;
       cursor: default;
     }
     .result-name {
@@ -389,11 +391,6 @@
 
           <hr class="sidebar-divider">
 
-          <span class="ctrl-label">School level</span>
-          <div class="level-filter" id="level-filter"></div>
-
-          <hr class="sidebar-divider">
-
           <span class="ctrl-label">Metric</span>
           <select id="metric-select"></select>
 
@@ -516,10 +513,8 @@
         return acc;
       }, {});
 
-      const ALL_LEVELS = ['Elementary', 'Middle', 'High', 'Other', 'Unknown'];
       const state = {
         selectedSchoolIds: new Set(),
-        selectedLevels: new Set(ALL_LEVELS),
         metricKey: dashboardData.initial_state.metric_key || 'enrollment',
         yearWindow: dashboardData.initial_state.year_window || 10,
         logScale: false,
@@ -584,7 +579,6 @@
 
       renderMetricSelect();
       renderRangeToggle();
-      renderLevelFilter();
       renderAll();
 
       // ── Render functions ─────────────────────────────────────────────────
@@ -720,35 +714,11 @@
         });
       }
 
-      function renderLevelFilter() {
-        const container = document.getElementById('level-filter');
-        container.innerHTML = '';
-        const labels = { Elementary: 'K–5', Middle: '6–8', High: '9–12', Other: 'Other' };
-        ALL_LEVELS.filter((l) => l !== 'Unknown').forEach((level) => {
-          const btn = document.createElement('button');
-          btn.className = state.selectedLevels.has(level) ? 'active' : 'ghost';
-          btn.textContent = labels[level] || level;
-          btn.title = level;
-          btn.addEventListener('click', () => {
-            state.selectedLevels.has(level) ? state.selectedLevels.delete(level) : state.selectedLevels.add(level);
-            renderLevelFilter();
-            renderSearchResults();
-          });
-          container.appendChild(btn);
-        });
-      }
-
       // ── Data helpers ──────────────────────────────────────────────────────
 
       function getSearchResults() {
         if (!state.schoolSearch) return [];
         const tokens = state.schoolSearch.split(/\s+/).filter(Boolean);
-
-        function levelOk(s) {
-          const level = s.school_level || 'Unknown';
-          return state.selectedLevels.has(level) ||
-            (level !== 'Elementary' && level !== 'Middle' && level !== 'High' && state.selectedLevels.has('Other'));
-        }
 
         // Lower score = more relevant
         function score(s) {
@@ -759,7 +729,7 @@
         }
 
         return dashboardData.schools
-          .filter((s) => levelOk(s) && tokens.every((t) => s.name.toLowerCase().includes(t)))
+          .filter((s) => tokens.every((t) => s.name.toLowerCase().includes(t)))
           .sort((a, b) => {
             const sd = score(a) - score(b);
             return sd !== 0 ? sd : a.name.localeCompare(b.name);
