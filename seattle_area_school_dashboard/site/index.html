@@ -536,36 +536,7 @@
         return ids;
       }
 
-      const chart = new Chart(document.getElementById('trendChart'), {
-        type: 'line',
-        data: { labels: [], datasets: [] },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'nearest', intersect: false },
-          plugins: {
-            legend: { position: 'bottom' },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => {
-                  const def = dashboardData.metrics[state.metricKey];
-                  return `${ctx.dataset.label}: ${formatValue(ctx.raw, def.format)}`;
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              type: 'linear',
-              ticks: { callback: (v) => formatAxisValue(v, dashboardData.metrics[state.metricKey].format) }
-            }
-          }
-        }
-      });
-
-      document.getElementById('build-meta').textContent =
-        `Generated ${new Date(dashboardData.generated_at).toLocaleDateString()} · NCES Common Core of Data`;
-
+      // Wire up event listeners before Chart init so a CDN failure never blocks search
       document.getElementById('school-search').addEventListener('input', (e) => {
         state.schoolSearch = e.target.value.trim().toLowerCase();
         renderSearchResults();
@@ -575,6 +546,41 @@
         state.logScale = e.target.checked;
         updateView();
       });
+
+      document.getElementById('build-meta').textContent =
+        `Generated ${new Date(dashboardData.generated_at).toLocaleDateString()} · NCES Common Core of Data`;
+
+      let chart;
+      try {
+        chart = new Chart(document.getElementById('trendChart'), {
+          type: 'line',
+          data: { labels: [], datasets: [] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'nearest', intersect: false },
+            plugins: {
+              legend: { position: 'bottom' },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => {
+                    const def = dashboardData.metrics[state.metricKey];
+                    return `${ctx.dataset.label}: ${formatValue(ctx.raw, def.format)}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                type: 'linear',
+                ticks: { callback: (v) => formatAxisValue(v, dashboardData.metrics[state.metricKey].format) }
+              }
+            }
+          }
+        });
+      } catch (e) {
+        document.getElementById('chart-note').textContent = 'Chart could not load (check network connection).';
+      }
 
       renderMetricSelect();
       renderRangeToggle();
@@ -736,19 +742,29 @@
 
       function getSearchResults() {
         if (!state.schoolSearch) return [];
+        const tokens = state.schoolSearch.split(/\s+/).filter(Boolean);
+
+        function levelOk(s) {
+          const level = s.school_level || 'Unknown';
+          return state.selectedLevels.has(level) ||
+            (level !== 'Elementary' && level !== 'Middle' && level !== 'High' && state.selectedLevels.has('Other'));
+        }
+
+        // Lower score = more relevant
+        function score(s) {
+          const lower = s.name.toLowerCase();
+          if (lower.startsWith(tokens[0])) return 0;
+          if (lower.split(/\s+/).some((w) => w.startsWith(tokens[0]))) return 1;
+          return 2;
+        }
+
         return dashboardData.schools
-          .filter((s) => {
-            if (!s.name.toLowerCase().includes(state.schoolSearch)) return false;
-            const level = s.school_level || 'Unknown';
-            return state.selectedLevels.has(level) ||
-              (level !== 'Elementary' && level !== 'Middle' && level !== 'High' && state.selectedLevels.has('Other'));
-          })
+          .filter((s) => levelOk(s) && tokens.every((t) => s.name.toLowerCase().includes(t)))
           .sort((a, b) => {
-            const aPrefix = a.name.toLowerCase().startsWith(state.schoolSearch);
-            const bPrefix = b.name.toLowerCase().startsWith(state.schoolSearch);
-            if (aPrefix !== bPrefix) return aPrefix ? -1 : 1;
-            return a.name.localeCompare(b.name);
-          });
+            const sd = score(a) - score(b);
+            return sd !== 0 ? sd : a.name.localeCompare(b.name);
+          })
+          .slice(0, 5);
       }
 
       function districtEnrollmentWeightedAvg(districtId, metricKey, year) {
@@ -798,6 +814,7 @@
       }
 
       function updateChart(def) {
+        if (!chart) return;
         const schoolIds = Array.from(state.selectedSchoolIds)
           .sort((a, b) => schoolById[a].name.localeCompare(schoolById[b].name))
           .slice(0, 8);
