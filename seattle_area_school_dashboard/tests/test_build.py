@@ -15,7 +15,9 @@ class BuildSiteTests(unittest.TestCase):
         tmp_path.mkdir(parents=True, exist_ok=True)
         try:
             build_site(tmp_path)
-            self.assertTrue((tmp_path / "site" / "index.html").exists())
+            # index.html is no longer generated — it lives in the repo and is
+            # uploaded to Pages as-is; only dashboard-data.json is built.
+            self.assertFalse((tmp_path / "site" / "index.html").exists())
             self.assertTrue((tmp_path / "site" / "dashboard-data.json").exists())
             self.assertFalse((tmp_path / "data" / "raw" / "nces_placeholder.csv").exists())
             self.assertFalse((tmp_path / "data").exists())
