@@ -861,7 +861,3 @@ def build_site(project_root: Path) -> None:
         json.dumps(dashboard_payload, indent=2),
         encoding="utf-8",
     )
-    (site_dir / "index.html").write_text(
-        HTML_TEMPLATE,
-        encoding="utf-8",
-    )
