@@ -84,6 +84,10 @@
       top: 20px;
       max-height: calc(100vh - 40px);
       overflow-y: auto;
+      overflow-x: visible;
+    }
+    aside .search-area {
+      position: relative;
     }
     .ctrl-label {
       display: block;
@@ -165,6 +169,10 @@
 
     /* Search results */
     .search-results {
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 50;
       margin-top: 7px;
       border-radius: 11px;
       border: 1px solid var(--border);
@@ -381,8 +389,10 @@
       <aside>
         <section class="panel">
           <span class="ctrl-label">Find a school</span>
-          <input id="school-search" class="search-input" type="search" placeholder="Search all schools…" autocomplete="off">
-          <div id="search-results" class="search-results" style="display:none"></div>
+          <div class="search-area">
+            <input id="school-search" class="search-input" type="search" placeholder="Search all schools…" autocomplete="off">
+            <div id="search-results" class="search-results" style="display:none"></div>
+          </div>
 
           <div id="chips-section" style="display:none">
             <span class="ctrl-label">Selected</span>
@@ -738,12 +748,15 @@
       }
 
       function districtEnrollmentWeightedAvg(districtId, metricKey, year) {
-        const district = districtById[districtId];
-        if (!district) return null;
         const isEnrollment = metricKey === 'enrollment';
         let sumW = 0, sumE = 0;
-        for (const schoolId of district.school_ids) {
-          const rec = recordsBySchool[schoolId]?.[year];
+        const districtSchools = dashboardData.schools.filter((s) =>
+          s.district_id === districtId &&
+          s.school_level !== 'Prekindergarten' &&
+          s.school_type !== 'Special Education School'
+        );
+        for (const school of districtSchools) {
+          const rec = recordsBySchool[school.id]?.[year];
           if (!rec) continue;
           const val = rec[metricKey];
           const enroll = rec.enrollment;
@@ -838,12 +851,16 @@
         chart.data.datasets = datasets;
         chart.update();
 
+        const PROFICIENCY_METRICS = new Set(['ela_proficiency_rate', 'math_proficiency_rate']);
         const all = Array.from(state.selectedSchoolIds);
-        document.getElementById('chart-note').textContent =
+        const baseNote =
           all.length > schoolIds.length ? `Showing first 8 of ${all.length} selected schools.`
           : useLog ? 'Y-axis is logarithmic — hover to see values.'
           : def.format === 'percent' ? 'Missing values are left blank, not interpolated.'
           : '';
+        const covidNote = PROFICIENCY_METRICS.has(state.metricKey)
+          ? ' 2019–2020 data was not collected statewide (COVID).' : '';
+        document.getElementById('chart-note').textContent = baseNote + covidNote;
       }
 
       function updateVsDistrictTable(def) {
@@ -862,6 +879,18 @@
         tbody.innerHTML = '';
         const schoolIds = Array.from(state.selectedSchoolIds)
           .sort((a, b) => schoolById[a].name.localeCompare(schoolById[b].name));
+
+        const allNull = schoolIds.every((id) => {
+          const rec = recordsBySchool[id]?.[curYear];
+          return !rec || rec[state.metricKey] === null || rec[state.metricKey] === undefined;
+        });
+        if (allNull) {
+          const msg = state.metricKey === 'four_year_grad_rate'
+            ? 'Graduation rate is only reported for high schools.'
+            : 'No data available for the selected schools and metric.';
+          tbody.innerHTML = `<tr><td colspan="4" style="padding:12px 8px;color:var(--muted);font-style:italic;">${msg}</td></tr>`;
+          return;
+        }
 
         for (const id of schoolIds) {
           const school = schoolById[id];
@@ -911,9 +940,19 @@
         const selected = dashboardData.schools.filter((s) => state.selectedSchoolIds.has(s.id));
         const activeDistrictIds = getSelectedDistrictIds();
         const curYear = dashboardData.years[dashboardData.years.length - 1];
-        const vals = selected
-          .map((s) => recordsBySchool[s.id]?.[curYear]?.[state.metricKey] ?? null)
-          .filter((v) => v !== null);
+        const isEnrollmentMetric = state.metricKey === 'enrollment';
+        let sumW = 0, sumE = 0, dataCount = 0;
+        for (const s of selected) {
+          const rec = recordsBySchool[s.id]?.[curYear];
+          if (!rec) continue;
+          const val = rec[state.metricKey];
+          const enroll = rec.enrollment;
+          if (val === null || val === undefined) continue;
+          if (isEnrollmentMetric) { sumW += val; sumE += 1; }
+          else { if (!enroll) continue; sumW += val * enroll; sumE += enroll; }
+          dataCount++;
+        }
+        const weightedAvg = sumE ? sumW / sumE : null;
 
         document.getElementById('selected-schools-value').textContent = String(selected.length);
         document.getElementById('selected-schools-caption').textContent =
@@ -927,10 +966,10 @@
             ? districtNames.join(', ')
             : districtNames.slice(0, 2).join(', ') + ` +${districtNames.length - 2} more`;
 
-        document.getElementById('average-value').textContent = vals.length
-          ? formatValue(vals.reduce((a, b) => a + b, 0) / vals.length, def.format) : '--';
-        document.getElementById('average-caption').textContent = vals.length
-          ? `Average across ${vals.length} school${vals.length !== 1 ? 's' : ''} in ${curYear}`
+        document.getElementById('average-value').textContent = weightedAvg !== null
+          ? formatValue(weightedAvg, def.format) : '--';
+        document.getElementById('average-caption').textContent = dataCount
+          ? `Avg across ${dataCount} school${dataCount !== 1 ? 's' : ''} in ${curYear} (enrollment-weighted)`
           : 'No data for selection';
 
         document.getElementById('coverage-value').textContent =
