@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Seattle Area School Dashboard</title>
+  <title>Seattle Area Public Schools Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -58,6 +58,13 @@
       font-weight: 700;
       margin-bottom: 2px;
     }
+    .hero-sub {
+      margin: 4px 0 0;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .hero-sub a { color: var(--teal); text-decoration: none; }
+    .hero-sub a:hover { text-decoration: underline; }
     .pill {
       display: inline-flex;
       align-items: center;
@@ -379,8 +386,13 @@
   <main style="display:none">
     <section class="hero">
       <div>
-        <div class="eyebrow">NCES CCD Data</div>
-        <h1>Seattle Area School Dashboard</h1>
+        <div class="eyebrow">Washington State K–12</div>
+        <h1>Seattle Area Public Schools Dashboard</h1>
+        <p class="hero-sub">
+          Data: <a href="https://nces.ed.gov/ccd/" target="_blank" rel="noopener">NCES Common Core of Data</a>
+          &nbsp;·&nbsp; <a href="https://ospi.k12.wa.us/data-reporting" target="_blank" rel="noopener">OSPI</a>
+          &nbsp;·&nbsp; <a href="https://github.com/shoepaladin/data-flora" target="_blank" rel="noopener">GitHub ↗</a>
+        </p>
       </div>
       <div class="pill" id="build-meta"></div>
     </section>
