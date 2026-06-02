@@ -26,13 +26,25 @@ sys.path.insert(0, str(ROOT / "src"))
 # Candidate datasets to probe
 # ---------------------------------------------------------------------------
 
-# User-provided 2024-25 resource IDs
+# Probe targets — resource IDs discovered via data.wa.gov search
 _PROBE_TARGETS = [
+    # Discipline (suspension rates)
     ("Discipline 2024-25",            "https://data.wa.gov/resource/c9tq-ntbq.csv"),
+    ("Discipline 2023-24",            "https://data.wa.gov/resource/sm68-769y.csv"),
+    # Languages (home language shares)
     ("Languages 2024-25",             "https://data.wa.gov/resource/g4qj-yi5j.csv"),
+    # SQSS — School Quality & Student Success (contains chronic absenteeism rate)
+    ("SQSS 2024-25",                  "https://data.wa.gov/resource/f7j6-nk2h.csv"),
+    ("SQSS 2023-24",                  "https://data.wa.gov/resource/q9gf-prrp.csv"),
+    ("SQSS 2022-23",                  "https://data.wa.gov/resource/hs5t-6yez.csv"),
+    ("SQSS 2021-22",                  "https://data.wa.gov/resource/tfs4-sdfn.csv"),
+    ("SQSS 2014-15 to 2021-22",       "https://data.wa.gov/resource/inqc-k3vt.csv"),
+    # Enrollment (used for English Learner share)
+    ("Enrollment 2024-25",            "https://data.wa.gov/resource/2rwv-gs2e.csv"),
+    ("Enrollment 2023-24",            "https://data.wa.gov/resource/q4ba-s3jc.csv"),
 ]
 
-# Socrata catalog search — find chronic absenteeism and EL datasets automatically
+# Socrata catalog search — find any remaining chronic absenteeism and EL datasets
 _CATALOG_SEARCHES = [
     ("chronic absenteeism report card education", "chronic_absenteeism"),
     ("english learner report card education",     "english_learner"),
@@ -67,12 +79,17 @@ def probe_target(label: str, base_url: str) -> None:
         rows = _fetch(sample_url)
     except Exception as exc:
         print(f"  ERROR fetching with school filter: {exc}")
-        # Try without filter
+        # Try without studentgrouptype filter (SQSS uses different grouptype values)
+        where2 = "&$where=" + urllib.parse.quote("organizationlevel='School'")
         try:
-            rows = _fetch(base_url + _SOCRATA_SAMPLE)
-        except Exception as exc2:
-            print(f"  ERROR fetching without filter: {exc2}")
-            return
+            rows = _fetch(base_url + _SOCRATA_SAMPLE + where2)
+        except Exception:
+            # Try with no filter at all
+            try:
+                rows = _fetch(base_url + _SOCRATA_SAMPLE)
+            except Exception as exc2:
+                print(f"  ERROR fetching without filter: {exc2}")
+                return
 
     if not rows:
         print("  (no rows returned)")
