@@ -177,6 +177,30 @@ METRIC_DEFINITIONS = {
         "format": "integer",
         "description": "Median Student Growth Percentile for Math across all tested grades (OSPI). 50 = typical growth; above 50 = above-typical. Grades 4–8 only (requires prior-year score). Not available 2019-20 through 2021-22.",
     },
+    "chronic_absentee_rate": {
+        "label": "Chronic absenteeism rate",
+        "category": "Attendance",
+        "format": "percent",
+        "description": "Percentage of students missing 10% or more of enrolled school days (OSPI Report Card). Applies to all school levels.",
+    },
+    "suspension_rate": {
+        "label": "Out-of-school suspension rate",
+        "category": "Discipline",
+        "format": "percent",
+        "description": "Percentage of students who received at least one short-term out-of-school suspension during the year (OSPI Report Card Discipline).",
+    },
+    "english_learner_share": {
+        "label": "English Learner share",
+        "category": "Student Population",
+        "format": "percent",
+        "description": "Percentage of students designated as English Learners (EL) by the school district (OSPI).",
+    },
+    "non_english_home_language_share": {
+        "label": "Non-English home language",
+        "category": "Student Population",
+        "format": "percent",
+        "description": "Percentage of students who speak a language other than English at home (OSPI Languages Spoken by Students and Families).",
+    },
 }
 
 

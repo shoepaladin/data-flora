@@ -18,6 +18,28 @@ ASSESSMENT_DATASETS = [
     ("2024-25", "https://data.wa.gov/resource/h5d9-vgwi.csv"),
 ]
 
+# Chronic Absenteeism — % of students missing 10%+ of school days (OSPI Report Card).
+# Resource IDs discovered via probe_ospi_schemas.py; populated after schema verification.
+CHRONIC_ABSENTEEISM_DATASETS: list[tuple[str, str]] = [
+    # ("2024-25", "https://data.wa.gov/resource/XXXX-XXXX.csv"),  # TODO: fill from probe
+]
+
+# Discipline — short-term out-of-school suspension rate (OSPI Report Card Discipline).
+DISCIPLINE_DATASETS = [
+    ("2024-25", "https://data.wa.gov/resource/c9tq-ntbq.csv"),
+]
+
+# English Learner share — % of students designated EL (OSPI Report Card Student Counts).
+# Resource IDs discovered via probe_ospi_schemas.py; populated after schema verification.
+ENGLISH_LEARNER_DATASETS: list[tuple[str, str]] = [
+    # ("2024-25", "https://data.wa.gov/resource/XXXX-XXXX.csv"),  # TODO: fill from probe
+]
+
+# Non-English home language — % of students speaking a language other than English at home.
+LANGUAGE_DATASETS = [
+    ("2024-25", "https://data.wa.gov/resource/g4qj-yi5j.csv"),
+]
+
 GRADUATION_DATASETS = [
     ("2016-17", "https://data.wa.gov/resource/ef3e-qpb8.csv"),
     ("2018-19", "https://data.wa.gov/resource/6iji-4nux.csv"),
@@ -124,6 +146,70 @@ _SGP_WHERE = (
     " AND studentgrouptype='AllStudents'"
     " AND gradelevel='All Grades'"
 )
+_ABSENTEEISM_WHERE = (
+    "organizationlevel='School'"
+    " AND studentgrouptype='All'"
+)
+# Discipline: filter to short-term out-of-school suspensions only.
+# DataLabel value verified by probe_ospi_schemas.py — update if probe shows a different string.
+_SUSPENSION_LABEL = "Short-Term Out-of-School Suspension Rate"
+_DISCIPLINE_WHERE = (
+    "organizationlevel='School'"
+    " AND studentgrouptype='All'"
+    f" AND datalabel='{_SUSPENSION_LABEL}'"
+)
+# Language dataset is one row per language per school — no studentgrouptype filter.
+_LANGUAGE_WHERE = "organizationlevel='School'"
+# English row identifier — skip when aggregating non-English share.
+_ENGLISH_LANGUAGE_NAMES = frozenset({"English", "ENGLISH", "english"})
+
+
+def _absenteeism_value(row: dict[str, str]) -> float | None:
+    """Extract chronic absenteeism rate, trying multiple known column name variants."""
+    # Try most-likely OSPI Report Card generic column first, then dataset-specific names.
+    for col in ("percentagevalue", "chronicabsenteeismrate", "percentageabsent",
+                "chronicabsent", "percentchronic"):
+        raw = row.get(col)
+        if raw is not None:
+            return _parse_pct_string(raw)
+    # Log actual columns so CI output reveals the correct name.
+    value_cols = [k for k in row if any(t in k.lower() for t in ("percent", "rate", "absent", "value"))]
+    if value_cols:
+        print(f"  WARNING: chronic absenteeism — unexpected columns, found: {value_cols[:8]}", file=sys.stderr)
+    return None
+
+
+def _suspension_value(row: dict[str, str]) -> float | None:
+    """Extract out-of-school suspension rate, trying multiple column name variants."""
+    for col in ("percentagevalue", "suspensionrate", "datavalue", "rate", "percentvalue"):
+        raw = row.get(col)
+        if raw is not None:
+            return _parse_pct_string(raw)
+    value_cols = [k for k in row if any(t in k.lower() for t in ("percent", "rate", "suspend", "value"))]
+    if value_cols:
+        print(f"  WARNING: discipline — unexpected columns, found: {value_cols[:8]}", file=sys.stderr)
+    return None
+
+
+def _language_is_english(row: dict[str, str]) -> bool:
+    """Return True if this row represents English speakers."""
+    for col in ("primarylanguage", "languagename", "language", "homelanguage"):
+        val = row.get(col, "")
+        if val:
+            return val.strip() in _ENGLISH_LANGUAGE_NAMES
+    return False
+
+
+def _language_student_count(row: dict[str, str]) -> int | None:
+    """Extract student count from a language row."""
+    for col in ("studentcount", "count", "students", "numberofstudents", "student_count"):
+        raw = row.get(col)
+        if raw is not None:
+            try:
+                return int(float(raw))
+            except (ValueError, TypeError):
+                return None
+    return None
 
 
 def _fetch_csv(url: str, where: str = "") -> list[dict[str, str]]:
@@ -335,5 +421,125 @@ def fetch_ospi_metrics(
     if unmatched:
         for district, school in sorted(unmatched):
             print(f"  UNMATCHED OSPI school: {district!r} / {school!r}", file=sys.stderr)
+
+    return result
+
+
+def fetch_new_metrics(
+    schools: list[dict],
+    project_root: Path | None = None,
+) -> dict[tuple[str, str], dict[str, float | None]]:
+    """Download chronic absenteeism, discipline, EL share, and language data.
+
+    Returns {(school_id, year): {metric_key: value}}.
+    Each metric is absent from the dict (not None) if its dataset list is empty.
+    """
+    overrides = load_overrides(project_root) if project_root else {}
+    exact, by_district = _build_name_index(schools)
+
+    def _resolve(canonical: str, school_name: str) -> str | None:
+        key = (_norm_name(canonical), _norm_name(school_name))
+        return overrides.get(key) or _lookup_school_id(canonical, school_name, exact, by_district)
+
+    result: dict[tuple[str, str], dict[str, float | None]] = {}
+    unmatched: set[tuple[str, str]] = set()
+
+    def _entry(sid: str, year: str) -> dict:
+        return result.setdefault((sid, year), {})
+
+    # ── Chronic absenteeism ──────────────────────────────────────────────────
+    for _label, url in CHRONIC_ABSENTEEISM_DATASETS:
+        print(f"Fetching chronic absenteeism data: {url}", file=sys.stderr)
+        try:
+            rows = _fetch_csv(url, _ABSENTEEISM_WHERE)
+        except Exception as exc:
+            print(f"  WARNING: failed to fetch {url}: {exc}", file=sys.stderr)
+            continue
+        for row in rows:
+            canonical = _norm_district(row.get("districtname", ""))
+            if not canonical:
+                continue
+            sid = _resolve(canonical, row.get("schoolname", ""))
+            if not sid:
+                unmatched.add((canonical, row.get("schoolname", "")))
+                continue
+            year = _expand_year(row.get("schoolyear", ""))
+            value = _absenteeism_value(row)
+            _entry(sid, year)["chronic_absentee_rate"] = value
+
+    # ── Discipline (short-term out-of-school suspension) ─────────────────────
+    for _label, url in DISCIPLINE_DATASETS:
+        print(f"Fetching discipline data: {url}", file=sys.stderr)
+        try:
+            rows = _fetch_csv(url, _DISCIPLINE_WHERE)
+        except Exception as exc:
+            print(f"  WARNING: failed to fetch {url}: {exc}", file=sys.stderr)
+            continue
+        for row in rows:
+            canonical = _norm_district(row.get("districtname", ""))
+            if not canonical:
+                continue
+            sid = _resolve(canonical, row.get("schoolname", ""))
+            if not sid:
+                unmatched.add((canonical, row.get("schoolname", "")))
+                continue
+            year = _expand_year(row.get("schoolyear", ""))
+            value = _suspension_value(row)
+            _entry(sid, year)["suspension_rate"] = value
+
+    # ── English Learner share ─────────────────────────────────────────────────
+    for _label, url in ENGLISH_LEARNER_DATASETS:
+        print(f"Fetching English Learner data: {url}", file=sys.stderr)
+        try:
+            rows = _fetch_csv(url, _ABSENTEEISM_WHERE)
+        except Exception as exc:
+            print(f"  WARNING: failed to fetch {url}: {exc}", file=sys.stderr)
+            continue
+        for row in rows:
+            canonical = _norm_district(row.get("districtname", ""))
+            if not canonical:
+                continue
+            sid = _resolve(canonical, row.get("schoolname", ""))
+            if not sid:
+                unmatched.add((canonical, row.get("schoolname", "")))
+                continue
+            year = _expand_year(row.get("schoolyear", ""))
+            value = _absenteeism_value(row)  # same percent column pattern
+            _entry(sid, year)["english_learner_share"] = value
+
+    # ── Non-English home language share ──────────────────────────────────────
+    # Language dataset is one row per language per school; aggregate here.
+    lang_totals: dict[tuple[str, str], tuple[int, int]] = {}  # (sid, year) -> (non_eng, total)
+    for _label, url in LANGUAGE_DATASETS:
+        print(f"Fetching language data: {url}", file=sys.stderr)
+        try:
+            rows = _fetch_csv(url, _LANGUAGE_WHERE)
+        except Exception as exc:
+            print(f"  WARNING: failed to fetch {url}: {exc}", file=sys.stderr)
+            continue
+        for row in rows:
+            canonical = _norm_district(row.get("districtname", ""))
+            if not canonical:
+                continue
+            sid = _resolve(canonical, row.get("schoolname", ""))
+            if not sid:
+                unmatched.add((canonical, row.get("schoolname", "")))
+                continue
+            year = _expand_year(row.get("schoolyear", ""))
+            count = _language_student_count(row)
+            if count is None or count < 0:
+                continue
+            is_eng = _language_is_english(row)
+            key = (sid, year)
+            non_eng, total = lang_totals.get(key, (0, 0))
+            lang_totals[key] = (non_eng + (0 if is_eng else count), total + count)
+
+    for (sid, year), (non_eng, total) in lang_totals.items():
+        share = non_eng / total if total > 0 else None
+        _entry(sid, year)["non_english_home_language_share"] = share
+
+    if unmatched:
+        for district, school in sorted(unmatched):
+            print(f"  UNMATCHED new-metric school: {district!r} / {school!r}", file=sys.stderr)
 
     return result

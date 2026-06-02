@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 from seattle_schools_dashboard.nces import METRIC_DEFINITIONS, build_dashboard_payload
-from seattle_schools_dashboard.ospi import fetch_ospi_metrics
+from seattle_schools_dashboard.ospi import fetch_new_metrics, fetch_ospi_metrics
 
 
 HTML_TEMPLATE = """<!doctype html>
@@ -832,15 +832,23 @@ def build_site(project_root: Path) -> None:
     site_dir.mkdir(parents=True, exist_ok=True)
 
     nces_payload = build_dashboard_payload(project_root)
-    ospi_metrics = fetch_ospi_metrics(nces_payload["schools"], project_root=project_root)
+    schools = nces_payload["schools"]
+    ospi_metrics = fetch_ospi_metrics(schools, project_root=project_root)
+    new_metrics  = fetch_new_metrics(schools, project_root=project_root)
 
     for record in nces_payload["records"]:
-        match = ospi_metrics.get((record["school_id"], record["year"]), {})
-        record["ela_proficiency_rate"] = match.get("ela_proficiency_rate")
-        record["math_proficiency_rate"] = match.get("math_proficiency_rate")
-        record["four_year_grad_rate"] = match.get("four_year_grad_rate")
-        record["ela_growth_percentile"] = match.get("ela_growth_percentile")
-        record["math_growth_percentile"] = match.get("math_growth_percentile")
+        key = (record["school_id"], record["year"])
+        match     = ospi_metrics.get(key, {})
+        new_match = new_metrics.get(key, {})
+        record["ela_proficiency_rate"]          = match.get("ela_proficiency_rate")
+        record["math_proficiency_rate"]         = match.get("math_proficiency_rate")
+        record["four_year_grad_rate"]           = match.get("four_year_grad_rate")
+        record["ela_growth_percentile"]         = match.get("ela_growth_percentile")
+        record["math_growth_percentile"]        = match.get("math_growth_percentile")
+        record["chronic_absentee_rate"]         = new_match.get("chronic_absentee_rate")
+        record["suspension_rate"]               = new_match.get("suspension_rate")
+        record["english_learner_share"]         = new_match.get("english_learner_share")
+        record["non_english_home_language_share"] = new_match.get("non_english_home_language_share")
 
     initial_school_ids = nces_payload.pop("initial_school_ids")
 
