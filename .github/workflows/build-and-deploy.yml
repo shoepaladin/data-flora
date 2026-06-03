@@ -8,7 +8,7 @@ on:
     - cron: "0 13 * * 1"
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -40,7 +40,22 @@ jobs:
         run: python -m unittest discover -s tests
 
       - name: Build static dashboard
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: python scripts/build_dashboard.py
+
+      - name: Refresh OSPI metrics
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: python scripts/refresh_ospi_metrics.py
+
+      - name: Commit refreshed data
+        if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git -C .. add seattle_area_school_dashboard/site/dashboard-data.json
+          git -C .. diff --cached --quiet || git -C .. commit -m "Refresh OSPI metrics data [skip ci]"
+          git -C .. push
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
