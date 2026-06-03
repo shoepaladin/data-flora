@@ -237,11 +237,11 @@ def _is_all_students_row(row: dict[str, str]) -> bool:
 
 def _suspension_value(row: dict[str, str]) -> float | None:
     """Extract out-of-school suspension rate, trying multiple column name variants."""
-    for col in ("percentagevalue", "suspensionrate", "datavalue", "rate", "percentvalue"):
+    for col in ("disciplinerate", "percentagevalue", "suspensionrate", "datavalue", "rate", "percentvalue"):
         raw = row.get(col)
         if raw is not None:
             return _parse_pct_string(raw)
-    value_cols = [k for k in row if any(t in k.lower() for t in ("percent", "rate", "suspend", "value"))]
+    value_cols = [k for k in row if any(t in k.lower() for t in ("percent", "rate", "suspend", "value", "discipline"))]
     if value_cols:
         print(f"  WARNING: discipline — unexpected columns, found: {value_cols[:8]}", file=sys.stderr)
     return None
@@ -283,13 +283,18 @@ def _language_is_english(row: dict[str, str]) -> bool:
     for col in ("primarylanguage", "languagename", "language", "homelanguage"):
         val = row.get(col, "")
         if val:
-            return val.strip() in _ENGLISH_LANGUAGE_NAMES
+            return val.strip().lower() == "english"
     return False
 
 
 def _language_student_count(row: dict[str, str]) -> int | None:
-    """Extract student count from a language row."""
-    for col in ("studentcount", "count", "students", "numberofstudents", "student_count"):
+    """Extract student count from a language row.
+
+    Actual columns in OSPI language dataset: studentcount_home,
+    studentcount_primarylanguage, studentcount_preferred.
+    """
+    for col in ("studentcount_home", "studentcount_primarylanguage", "studentcount_preferred",
+                "studentcount_organizationtotal", "studentcount", "count", "students", "numberofstudents"):
         raw = row.get(col)
         if raw is not None:
             try:
@@ -569,7 +574,8 @@ def fetch_new_metrics(
         except Exception as exc:
             print(f"  WARNING: failed to fetch {url}: {exc}", file=sys.stderr)
             continue
-        _logged_cols = False
+        if rows:
+            print(f"  INFO: discipline cols ({len(rows[0])} total): {list(rows[0].keys())}", file=sys.stderr)
         matched_rows = 0
         for row in rows:
             if not _is_all_students_row(row):
@@ -586,9 +592,6 @@ def fetch_new_metrics(
                 continue
             year = _expand_year(_row_school_year(row))
             value = _suspension_value(row)
-            if value is None and not _logged_cols:
-                print(f"  INFO: discipline cols sample: {list(row.keys())[:12]}", file=sys.stderr)
-                _logged_cols = True
             _entry(sid, year)["suspension_rate"] = value
         print(f"  matched {matched_rows} suspension rows from {url}", file=sys.stderr)
 
@@ -605,13 +608,11 @@ def fetch_new_metrics(
         except Exception as exc:
             print(f"  WARNING: failed to fetch {url}: {exc}", file=sys.stderr)
             continue
-        _logged_el_cols = False
+        if all_rows:
+            print(f"  INFO: enrollment cols ({len(all_rows[0])} total): {list(all_rows[0].keys())}", file=sys.stderr)
         for row in all_rows:
             canonical = _norm_district(_row_district_name(row))
             if not canonical:
-                if not _logged_el_cols and all_rows:
-                    print(f"  INFO: enrollment cols sample: {list(row.keys())[:12]}", file=sys.stderr)
-                    _logged_el_cols = True
                 continue
             sid = _resolve(canonical, _row_school_name(row))
             if not sid:
@@ -633,10 +634,10 @@ def fetch_new_metrics(
         _entry(*key)["english_learner_share"] = share
 
     # ── Non-English home language share ──────────────────────────────────────
-    # Language dataset is one row per language per school; aggregate here.
-    # No WHERE filter — organizationlevel values differ from other OSPI datasets;
-    # filter to school-level rows in Python by checking the districtname column.
-    lang_totals: dict[tuple[str, str], tuple[int, int]] = {}  # (sid, year) -> (non_eng, total)
+    # Language dataset is district-level (no schoolname column) — one row per
+    # language per district. Aggregate at district level, then propagate the
+    # share to every school in that district.
+    dist_lang: dict[tuple[str, str], tuple[int, int]] = {}  # (canonical_dist, year) -> (non_eng, total)
     for _label, url in LANGUAGE_DATASETS:
         print(f"Fetching language data: {url}", file=sys.stderr)
         try:
@@ -647,29 +648,35 @@ def fetch_new_metrics(
         if not rows:
             print(f"  INFO: language dataset returned 0 rows", file=sys.stderr)
             continue
-        # Log column names from first row to aid debugging
-        print(f"  INFO: language cols: {list(rows[0].keys())[:16]}", file=sys.stderr)
-        _logged_lang_cols = True
+        print(f"  INFO: language cols ({len(rows[0])} total): {list(rows[0].keys())}", file=sys.stderr)
         for row in rows:
             canonical = _norm_district(_row_district_name(row))
             if not canonical:
-                continue
-            sid = _resolve(canonical, _row_school_name(row))
-            if not sid:
-                unmatched.add((canonical, _row_school_name(row)))
                 continue
             year = _expand_year(_row_school_year(row))
             count = _language_student_count(row)
             if count is None or count < 0:
                 continue
             is_eng = _language_is_english(row)
-            key = (sid, year)
-            non_eng, total = lang_totals.get(key, (0, 0))
-            lang_totals[key] = (non_eng + (0 if is_eng else count), total + count)
+            key = (canonical, year)
+            non_eng, total = dist_lang.get(key, (0, 0))
+            dist_lang[key] = (non_eng + (0 if is_eng else count), total + count)
 
-    for (sid, year), (non_eng, total) in lang_totals.items():
+    # Build reverse map: canonical district name -> list of school IDs
+    dist_to_school_ids: dict[str, list[str]] = {}
+    for school in schools:
+        canonical = _norm_district(school.get("district_name", ""))
+        if canonical:
+            dist_to_school_ids.setdefault(canonical, []).append(school["id"])
+
+    matched_districts = 0
+    for (canonical, year), (non_eng, total) in dist_lang.items():
         share = non_eng / total if total > 0 else None
-        _entry(sid, year)["non_english_home_language_share"] = share
+        for sid in dist_to_school_ids.get(canonical, []):
+            _entry(sid, year)["non_english_home_language_share"] = share
+        if dist_to_school_ids.get(canonical):
+            matched_districts += 1
+    print(f"  propagated language share to {matched_districts} district-years", file=sys.stderr)
 
     if unmatched:
         for district, school in sorted(unmatched):
