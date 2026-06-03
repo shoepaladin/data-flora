@@ -29,7 +29,7 @@ CHRONIC_ABSENTEEISM_DATASETS: list[tuple[str, str]] = [
 
 # Discipline — short-term out-of-school suspension rate (OSPI Report Card Discipline).
 DISCIPLINE_DATASETS = [
-    ("2022-23", "https://data.wa.gov/resource/9k9s-g4gy.csv"),
+    # 2022-23 resource ID not yet confirmed; add when found
     ("2023-24", "https://data.wa.gov/resource/sm68-769y.csv"),
     ("2024-25", "https://data.wa.gov/resource/c9tq-ntbq.csv"),
 ]
@@ -157,17 +157,15 @@ _ABSENTEEISM_WHERE = (
     "organizationlevel='School'"
     " AND studentgrouptype='All'"
 )
-# Discipline: fetch all school/all-students rows; filter to suspension in Python
-# because 'datalabel' may not exist as a SoQL column in all year releases.
+# Discipline: fetch all school rows without studentgrouptype filter — different year
+# releases use 'All', 'All Students', or other values; filter to All rows in Python.
 _SUSPENSION_LABEL = "Short-Term Out-of-School Suspension Rate"
-_DISCIPLINE_WHERE = (
-    "organizationlevel='School'"
-    " AND studentgrouptype='All'"
-)
-# EL enrollment: filter to the EL student group; value column holds enrollment count.
-_EL_WHERE = "organizationlevel='School' AND studentgrouptype='English Language Learners'"
-# Language dataset is one row per language per school — no studentgrouptype filter.
-_LANGUAGE_WHERE = "organizationlevel='School'"
+_DISCIPLINE_WHERE = "organizationlevel='School'"
+# Enrollment: fetch all school rows; filter to EL / All-students in Python.
+_ENROLLMENT_WHERE = "organizationlevel='School'"
+# Language dataset: no WHERE filter — the organizationlevel values differ from other
+# OSPI datasets; filter to school-level rows in Python after fetching.
+_LANGUAGE_WHERE = ""
 # English row identifier — skip when aggregating non-English share.
 _ENGLISH_LANGUAGE_NAMES = frozenset({"English", "ENGLISH", "english"})
 
@@ -231,6 +229,12 @@ def _is_absenteeism_row(row: dict[str, str]) -> bool:
     return True
 
 
+def _is_all_students_row(row: dict[str, str]) -> bool:
+    """Return True if this row represents all students (not a subgroup)."""
+    val = row.get("studentgrouptype", "").lower().strip()
+    return val in ("all", "all students", "total", "all student groups", "")
+
+
 def _suspension_value(row: dict[str, str]) -> float | None:
     """Extract out-of-school suspension rate, trying multiple column name variants."""
     for col in ("percentagevalue", "suspensionrate", "datavalue", "rate", "percentvalue"):
@@ -241,6 +245,12 @@ def _suspension_value(row: dict[str, str]) -> float | None:
     if value_cols:
         print(f"  WARNING: discipline — unexpected columns, found: {value_cols[:8]}", file=sys.stderr)
     return None
+
+
+def _is_el_row(row: dict[str, str]) -> bool:
+    """Return True if this enrollment row is for English Learners."""
+    val = row.get("studentgrouptype", "").lower().strip()
+    return any(t in val for t in ("english language learner", "ell", "el ", "english learner"))
 
 
 def _el_enrollment_count(row: dict[str, str]) -> int | None:
@@ -562,6 +572,8 @@ def fetch_new_metrics(
         _logged_cols = False
         matched_rows = 0
         for row in rows:
+            if not _is_all_students_row(row):
+                continue
             if not _is_suspension_row(row):
                 continue
             matched_rows += 1
@@ -583,45 +595,37 @@ def fetch_new_metrics(
     # ── English Learner share (Enrollment datasets, EL student group) ─────────
     # Enrollment datasets have one row per school per student group.
     # EL share = EL enrollment count / All-students enrollment count.
+    # Fetch all rows in one pass; separate into EL and All-students in Python.
     el_counts: dict[tuple[str, str], int] = {}      # (sid, year) -> EL count
     total_counts: dict[tuple[str, str], int] = {}   # (sid, year) -> total enrollment
     for _label, url in ENGLISH_LEARNER_DATASETS:
         print(f"Fetching English Learner data: {url}", file=sys.stderr)
-        # Fetch EL rows
         try:
-            el_rows = _fetch_csv(url, _EL_WHERE)
+            all_rows = _fetch_csv(url, _ENROLLMENT_WHERE)
         except Exception as exc:
-            print(f"  WARNING: failed to fetch EL rows from {url}: {exc}", file=sys.stderr)
-            el_rows = []
-        for row in el_rows:
+            print(f"  WARNING: failed to fetch {url}: {exc}", file=sys.stderr)
+            continue
+        _logged_el_cols = False
+        for row in all_rows:
             canonical = _norm_district(_row_district_name(row))
             if not canonical:
+                if not _logged_el_cols and all_rows:
+                    print(f"  INFO: enrollment cols sample: {list(row.keys())[:12]}", file=sys.stderr)
+                    _logged_el_cols = True
                 continue
             sid = _resolve(canonical, _row_school_name(row))
             if not sid:
                 unmatched.add((canonical, _row_school_name(row)))
                 continue
             year = _expand_year(_row_school_year(row))
-            count = _el_enrollment_count(row)
-            if count is not None and count >= 0:
-                el_counts[(sid, year)] = count
-        # Fetch All-students total enrollment
-        try:
-            all_rows = _fetch_csv(url, _ABSENTEEISM_WHERE)
-        except Exception as exc:
-            print(f"  WARNING: failed to fetch All rows from {url}: {exc}", file=sys.stderr)
-            all_rows = []
-        for row in all_rows:
-            canonical = _norm_district(_row_district_name(row))
-            if not canonical:
-                continue
-            sid = _resolve(canonical, _row_school_name(row))
-            if not sid:
-                continue
-            year = _expand_year(_row_school_year(row))
-            total = _total_enrollment_count(row)
-            if total is not None and total > 0:
-                total_counts[(sid, year)] = total
+            if _is_el_row(row):
+                count = _el_enrollment_count(row)
+                if count is not None and count >= 0:
+                    el_counts[(sid, year)] = count
+            elif _is_all_students_row(row):
+                total = _total_enrollment_count(row)
+                if total is not None and total > 0:
+                    total_counts[(sid, year)] = total
 
     for key, el in el_counts.items():
         total = total_counts.get(key)
@@ -630,6 +634,8 @@ def fetch_new_metrics(
 
     # ── Non-English home language share ──────────────────────────────────────
     # Language dataset is one row per language per school; aggregate here.
+    # No WHERE filter — organizationlevel values differ from other OSPI datasets;
+    # filter to school-level rows in Python by checking the districtname column.
     lang_totals: dict[tuple[str, str], tuple[int, int]] = {}  # (sid, year) -> (non_eng, total)
     for _label, url in LANGUAGE_DATASETS:
         print(f"Fetching language data: {url}", file=sys.stderr)
@@ -638,13 +644,15 @@ def fetch_new_metrics(
         except Exception as exc:
             print(f"  WARNING: failed to fetch {url}: {exc}", file=sys.stderr)
             continue
-        _logged_lang_cols = False
+        if not rows:
+            print(f"  INFO: language dataset returned 0 rows", file=sys.stderr)
+            continue
+        # Log column names from first row to aid debugging
+        print(f"  INFO: language cols: {list(rows[0].keys())[:16]}", file=sys.stderr)
+        _logged_lang_cols = True
         for row in rows:
             canonical = _norm_district(_row_district_name(row))
             if not canonical:
-                if not _logged_lang_cols and rows:
-                    print(f"  INFO: language cols sample: {list(row.keys())[:12]}", file=sys.stderr)
-                    _logged_lang_cols = True
                 continue
             sid = _resolve(canonical, _row_school_name(row))
             if not sid:
