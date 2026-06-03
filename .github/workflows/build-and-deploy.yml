@@ -43,6 +43,10 @@ jobs:
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: python scripts/build_dashboard.py
 
+      - name: Refresh OSPI metrics
+        continue-on-error: true
+        run: python scripts/refresh_ospi_metrics.py
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
