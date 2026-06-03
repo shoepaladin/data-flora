@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 import json
+import os
 import unittest
 import uuid
 
@@ -8,7 +9,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from seattle_schools_dashboard.build import build_site
 
+# Full build requires downloading NCES + OSPI data from the internet.
+# Skip by default; set FULL_BUILD_TEST=1 to run.
+_FULL_BUILD = bool(os.environ.get("FULL_BUILD_TEST"))
+_skip_no_network = unittest.skipUnless(_FULL_BUILD, "set FULL_BUILD_TEST=1 to run full build test")
 
+
+@_skip_no_network
 class BuildSiteTests(unittest.TestCase):
     def test_build_site_creates_github_pages_output(self) -> None:
         tmp_path = Path(__file__).resolve().parents[1] / ".tmp-test-build" / str(uuid.uuid4())
