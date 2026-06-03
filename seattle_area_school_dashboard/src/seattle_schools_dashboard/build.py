@@ -848,7 +848,6 @@ def build_site(project_root: Path) -> None:
         record["chronic_absentee_rate"]         = new_match.get("chronic_absentee_rate")
         record["suspension_rate"]               = new_match.get("suspension_rate")
         record["english_learner_share"]         = new_match.get("english_learner_share")
-        record["non_english_home_language_share"] = new_match.get("non_english_home_language_share")
 
     initial_school_ids = nces_payload.pop("initial_school_ids")
 

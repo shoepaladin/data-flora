@@ -195,12 +195,6 @@ METRIC_DEFINITIONS = {
         "format": "percent",
         "description": "Percentage of students designated as English Learners (EL) by the school district (OSPI).",
     },
-    "non_english_home_language_share": {
-        "label": "Non-English home language",
-        "category": "Student Population",
-        "format": "percent",
-        "description": "Percentage of students who speak a language other than English at home (OSPI Languages Spoken by Students and Families).",
-    },
 }
 
 

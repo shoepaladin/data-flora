@@ -1,4 +1,4 @@
-"""Unit + integration tests for the four new OSPI metrics.
+"""Unit + integration tests for the new OSPI metrics.
 
 Unit tests (always run): verify parse/aggregate logic using mocked CSV rows.
 Integration tests (network-gated): fetch real OSPI data, verify plausible values
@@ -18,10 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from seattle_schools_dashboard.ospi import (
-    _ENGLISH_LANGUAGE_NAMES,
     _absenteeism_value,
-    _language_is_english,
-    _language_student_count,
     _suspension_value,
     fetch_new_metrics,
 )
@@ -104,44 +101,12 @@ class SuspensionParserTests(unittest.TestCase):
     def test_no_matching_column_returns_none(self):
         self.assertIsNone(_suspension_value({"othercolumn": "5%"}))
 
+    def test_disciplinerate_column(self):
+        self.assertAlmostEqual(_suspension_value({"disciplinerate": "7.8%"}), 0.078)
+
     def test_zero_rate(self):
         self.assertAlmostEqual(_suspension_value({"percentagevalue": "0%"}), 0.0)
 
-
-class LanguageHelperTests(unittest.TestCase):
-
-    def test_english_by_primarylanguage(self):
-        self.assertTrue(_language_is_english({"primarylanguage": "English"}))
-
-    def test_english_by_languagename(self):
-        self.assertTrue(_language_is_english({"languagename": "English"}))
-
-    def test_english_uppercase(self):
-        self.assertTrue(_language_is_english({"languagename": "ENGLISH"}))
-
-    def test_spanish_not_english(self):
-        self.assertFalse(_language_is_english({"languagename": "Spanish"}))
-
-    def test_somali_not_english(self):
-        self.assertFalse(_language_is_english({"primarylanguage": "Somali"}))
-
-    def test_empty_row_not_english(self):
-        self.assertFalse(_language_is_english({}))
-
-    def test_student_count_int(self):
-        self.assertEqual(_language_student_count({"studentcount": "42"}), 42)
-
-    def test_student_count_float_string(self):
-        self.assertEqual(_language_student_count({"studentcount": "42.0"}), 42)
-
-    def test_student_count_count_column(self):
-        self.assertEqual(_language_student_count({"count": "10"}), 10)
-
-    def test_student_count_missing_returns_none(self):
-        self.assertIsNone(_language_student_count({}))
-
-    def test_student_count_invalid_returns_none(self):
-        self.assertIsNone(_language_student_count({"studentcount": "N/A"}))
 
 
 # ---------------------------------------------------------------------------
@@ -150,22 +115,19 @@ class LanguageHelperTests(unittest.TestCase):
 
 class FetchNewMetricsUnitTests(unittest.TestCase):
 
-    def _run_with_fake(self, *, discipline_rows=None, language_rows=None,
-                       absenteeism_rows=None, el_rows=None):
+    def _run_with_fake(self, *, discipline_rows=None, absenteeism_rows=None, el_rows=None):
         from seattle_schools_dashboard import ospi as m
 
         restore = _patch(m,
             CHRONIC_ABSENTEEISM_DATASETS=[("2024-25", "https://fake-absent.example")] if absenteeism_rows else [],
             DISCIPLINE_DATASETS=[("2024-25", "https://fake-discipline.example")] if discipline_rows else [],
             ENGLISH_LEARNER_DATASETS=[("2024-25", "https://fake-el.example")] if el_rows else [],
-            LANGUAGE_DATASETS=[("2024-25", "https://fake-lang.example")] if language_rows else [],
         )
 
         row_map = {
             "https://fake-absent.example":     absenteeism_rows or [],
             "https://fake-discipline.example": discipline_rows or [],
             "https://fake-el.example":         el_rows or [],
-            "https://fake-lang.example":       language_rows or [],
         }
         original_fetch = m._fetch_csv
         m._fetch_csv = lambda url, where="": row_map.get(url, [])
@@ -219,40 +181,6 @@ class FetchNewMetricsUnitTests(unittest.TestCase):
         result = self._run_with_fake(absenteeism_rows=rows)
         self.assertAlmostEqual(result[("s1", "2024-2025")]["chronic_absentee_rate"], 0.184)
 
-    # ── Language share ────────────────────────────────────────────────────
-
-    def test_non_english_share_computed(self):
-        rows = [
-            {**self._base_row(), "languagename": "English", "studentcount": "400"},
-            {**self._base_row(), "languagename": "Spanish", "studentcount": "80"},
-            {**self._base_row(), "languagename": "Somali",  "studentcount": "20"},
-        ]
-        result = self._run_with_fake(language_rows=rows)
-        # 100 non-English out of 500 total = 0.2
-        self.assertAlmostEqual(result[("s1", "2024-2025")]["non_english_home_language_share"], 0.2)
-
-    def test_all_english_gives_zero_share(self):
-        rows = [{**self._base_row(), "languagename": "English", "studentcount": "500"}]
-        result = self._run_with_fake(language_rows=rows)
-        self.assertAlmostEqual(result[("s1", "2024-2025")]["non_english_home_language_share"], 0.0)
-
-    def test_no_english_row_gives_full_share(self):
-        rows = [
-            {**self._base_row(), "languagename": "Spanish",  "studentcount": "300"},
-            {**self._base_row(), "languagename": "Tagalog",  "studentcount": "200"},
-        ]
-        result = self._run_with_fake(language_rows=rows)
-        self.assertAlmostEqual(result[("s1", "2024-2025")]["non_english_home_language_share"], 1.0)
-
-    def test_invalid_count_row_skipped(self):
-        rows = [
-            {**self._base_row(), "languagename": "English", "studentcount": "N/A"},
-            {**self._base_row(), "languagename": "Spanish", "studentcount": "100"},
-        ]
-        result = self._run_with_fake(language_rows=rows)
-        # Only the valid Spanish row counts; English was invalid so total = 100, non-eng = 100
-        self.assertAlmostEqual(result[("s1", "2024-2025")]["non_english_home_language_share"], 1.0)
-
     def test_empty_datasets_produce_empty_result(self):
         result = self._run_with_fake()
         self.assertEqual(result, {})
@@ -299,48 +227,6 @@ class IntegrationDisciplineTests(unittest.TestCase):
         seattle_ids = {s["id"] for s in payload["schools"] if s["district_name"] == "Seattle"}
         matched = {sid for (sid, _) in self.result if sid in seattle_ids}
         self.assertGreater(len(matched), 5, "Expected several Seattle schools with discipline data")
-
-
-@_skip_no_network
-class IntegrationLanguageTests(unittest.TestCase):
-    """Verify language share data is plausible for 2024-25."""
-
-    @classmethod
-    def setUpClass(cls):
-        from seattle_schools_dashboard.ospi import fetch_new_metrics
-        import json
-        data_path = Path(__file__).resolve().parents[1] / "site" / "dashboard-data.json"
-        schools = json.loads(data_path.read_text())["schools"]
-        cls.result = fetch_new_metrics(schools)
-
-    def test_at_least_20_schools_have_language_data(self):
-        count = sum(
-            1 for v in self.result.values()
-            if v.get("non_english_home_language_share") is not None
-        )
-        self.assertGreater(count, 20)
-
-    def test_all_shares_in_0_to_1(self):
-        for (sid, year), metrics in self.result.items():
-            share = metrics.get("non_english_home_language_share")
-            if share is not None:
-                self.assertGreaterEqual(share, 0.0)
-                self.assertLessEqual(share, 1.0)
-
-    def test_seattle_schools_tend_toward_higher_diversity(self):
-        """Seattle schools should have non-trivial non-English home language shares."""
-        import json
-        data_path = Path(__file__).resolve().parents[1] / "site" / "dashboard-data.json"
-        payload = json.loads(data_path.read_text())
-        seattle_ids = {s["id"] for s in payload["schools"] if s["district_name"] == "Seattle"}
-        seattle_shares = [
-            v["non_english_home_language_share"]
-            for (sid, _), v in self.result.items()
-            if sid in seattle_ids and v.get("non_english_home_language_share") is not None
-        ]
-        if seattle_shares:
-            avg = sum(seattle_shares) / len(seattle_shares)
-            self.assertGreater(avg, 0.05, "Expected Seattle schools to have >5% non-English avg")
 
 
 if __name__ == "__main__":
