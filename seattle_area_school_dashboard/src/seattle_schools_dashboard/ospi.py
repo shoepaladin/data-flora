@@ -157,14 +157,15 @@ _SGP_WHERE = (
 )
 _ABSENTEEISM_WHERE = (
     "organizationlevel='School'"
-    " AND studentgrouptype='All'"
+    " AND studentgrouptype='All Students'"
+    " AND measure='Regular Attendance'"
 )
 # Discipline: fetch all school rows without studentgrouptype filter — different year
 # releases use 'All', 'All Students', or other values; filter to All rows in Python.
 _SUSPENSION_LABEL = "Short-Term Out-of-School Suspension Rate"
 _DISCIPLINE_WHERE = "organizationlevel='School'"
-# Enrollment: fetch all school rows; filter to EL / All-students in Python.
-_ENROLLMENT_WHERE = "organizationlevel='School'"
+# Enrollment datasets are wide-format (one row per school/gradelevel, EL count is a column).
+_ENROLLMENT_WHERE = "organizationlevel='School' AND gradelevel='All Grades'"
 
 
 def _row_district_name(row: dict[str, str]) -> str:
@@ -205,24 +206,29 @@ def _is_suspension_row(row: dict[str, str]) -> bool:
 
 
 def _absenteeism_value(row: dict[str, str]) -> float | None:
-    """Extract chronic absenteeism rate, trying multiple known column name variants."""
+    """Extract chronic absenteeism rate from a Regular Attendance SQSS row.
+
+    OSPI SQSS reports Regular Attendance (% attending ≥90% of days) in the
+    'percent' column. Chronic absenteeism = 1 - regular_attendance.
+    """
+    raw = row.get("percent")
+    if raw is not None:
+        v = _parse_pct_string(raw)
+        return round(1.0 - v, 8) if v is not None else None
     for col in ("percentagevalue", "chronicabsenteeismrate", "percentageabsent",
                 "chronicabsent", "percentchronic"):
         raw = row.get(col)
         if raw is not None:
             return _parse_pct_string(raw)
-    value_cols = [k for k in row if any(t in k.lower() for t in ("percent", "rate", "absent", "value"))]
-    if value_cols:
-        print(f"  WARNING: chronic absenteeism — unexpected columns, found: {value_cols[:8]}", file=sys.stderr)
     return None
 
 
 def _is_absenteeism_row(row: dict[str, str]) -> bool:
-    """Return True if this SQSS row contains the chronic absenteeism indicator."""
-    for col in ("datalabel", "indicator", "measure", "sqssindicator"):
+    """Return True if this SQSS row is the Regular Attendance (chronic absenteeism) measure."""
+    for col in ("measure", "datalabel", "indicator", "sqssindicator"):
         val = row.get(col, "")
         if val:
-            return "absent" in val.lower()
+            return "attendance" in val.lower() or "absent" in val.lower()
     return True
 
 
@@ -567,12 +573,10 @@ def fetch_new_metrics(
             _entry(sid, year)["suspension_rate"] = value
         print(f"  matched {matched_rows} suspension rows from {url}", file=sys.stderr)
 
-    # ── English Learner share (Enrollment datasets, EL student group) ─────────
-    # Enrollment datasets have one row per school per student group.
-    # EL share = EL enrollment count / All-students enrollment count.
-    # Fetch all rows in one pass; separate into EL and All-students in Python.
-    el_counts: dict[tuple[str, str], int] = {}      # (sid, year) -> EL count
-    total_counts: dict[tuple[str, str], int] = {}   # (sid, year) -> total enrollment
+    # ── English Learner share (Enrollment datasets, wide format) ─────────────
+    # OSPI enrollment datasets are wide-format: one row per school/gradelevel with
+    # english_language_learners and all_students as direct columns (not separate rows).
+    # WHERE clause pre-filters to gradelevel='All Grades'.
     for _label, url in ENGLISH_LEARNER_DATASETS:
         print(f"Fetching English Learner data: {url}", file=sys.stderr)
         try:
@@ -580,8 +584,7 @@ def fetch_new_metrics(
         except Exception as exc:
             print(f"  WARNING: failed to fetch {url}: {exc}", file=sys.stderr)
             continue
-        if all_rows:
-            print(f"  INFO: enrollment cols ({len(all_rows[0])} total): {list(all_rows[0].keys())}", file=sys.stderr)
+        matched_el = 0
         for row in all_rows:
             canonical = _norm_district(_row_district_name(row))
             if not canonical:
@@ -591,19 +594,15 @@ def fetch_new_metrics(
                 unmatched.add((canonical, _row_school_name(row)))
                 continue
             year = _expand_year(_row_school_year(row))
-            if _is_el_row(row):
-                count = _el_enrollment_count(row)
-                if count is not None and count >= 0:
-                    el_counts[(sid, year)] = count
-            elif _is_all_students_row(row):
-                total = _total_enrollment_count(row)
-                if total is not None and total > 0:
-                    total_counts[(sid, year)] = total
-
-    for key, el in el_counts.items():
-        total = total_counts.get(key)
-        share = el / total if total and total > 0 else None
-        _entry(*key)["english_learner_share"] = share
+            try:
+                el = int(float(row.get("english_language_learners") or 0))
+                total = int(float(row.get("all_students") or 0))
+            except (ValueError, TypeError):
+                continue
+            if total > 0:
+                _entry(sid, year)["english_learner_share"] = el / total
+                matched_el += 1
+        print(f"  matched {matched_el} EL rows from {url}", file=sys.stderr)
 
     if unmatched:
         for district, school in sorted(unmatched):
