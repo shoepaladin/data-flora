@@ -187,7 +187,7 @@ METRIC_DEFINITIONS = {
         "label": "Suspension rate",
         "category": "School Climate",
         "format": "percent",
-        "description": "Short-term out-of-school suspension rate (OSPI). Share of students who received at least one short-term out-of-school suspension during the year.",
+        "description": "Short-term out-of-school suspension rate (OSPI). Share of students who received at least one short-term out-of-school suspension during the year. Available 2023–24 and 2024–25 only.",
     },
     "english_learner_share": {
         "label": "English Learner share",
