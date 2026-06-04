@@ -18,6 +18,37 @@ ASSESSMENT_DATASETS = [
     ("2024-25", "https://data.wa.gov/resource/h5d9-vgwi.csv"),
 ]
 
+# Chronic Absenteeism — OSPI Report Card SQSS (School Quality & Student Success).
+# Each dataset covers one school year; resource IDs confirmed from data.wa.gov.
+CHRONIC_ABSENTEEISM_DATASETS: list[tuple[str, str]] = [
+    ("2021-22", "https://data.wa.gov/resource/tfs4-sdfn.csv"),
+    ("2022-23", "https://data.wa.gov/resource/hs5t-6yez.csv"),
+    ("2023-24", "https://data.wa.gov/resource/q9gf-prrp.csv"),
+    ("2024-25", "https://data.wa.gov/resource/f7j6-nk2h.csv"),
+]
+
+# Discipline — short-term out-of-school suspension rate (OSPI Report Card Discipline).
+DISCIPLINE_DATASETS = [
+    # 2022-23 resource ID not yet confirmed; add when found
+    ("2023-24", "https://data.wa.gov/resource/sm68-769y.csv"),
+    ("2024-25", "https://data.wa.gov/resource/c9tq-ntbq.csv"),
+]
+
+# English Learner share — OSPI Report Card Enrollment, filtered to EL student group.
+# Enrollment datasets have one row per school/student-group combination.
+ENGLISH_LEARNER_DATASETS: list[tuple[str, str]] = [
+    ("2022-23", "https://data.wa.gov/resource/dij7-mbxg.csv"),
+    ("2023-24", "https://data.wa.gov/resource/q4ba-s3jc.csv"),
+    ("2024-25", "https://data.wa.gov/resource/2rwv-gs2e.csv"),
+]
+
+# Non-English home language — % of students speaking a language other than English at home.
+# NOTE: The OSPI language dataset (g4qj-yi5j) is district-level only (no school name).
+# This metric is not surfaced in the dashboard; kept here for reference only.
+# LANGUAGE_DATASETS = [
+#     ("2024-25", "https://data.wa.gov/resource/g4qj-yi5j.csv"),
+# ]
+
 GRADUATION_DATASETS = [
     ("2016-17", "https://data.wa.gov/resource/ef3e-qpb8.csv"),
     ("2018-19", "https://data.wa.gov/resource/6iji-4nux.csv"),
@@ -124,6 +155,125 @@ _SGP_WHERE = (
     " AND studentgrouptype='AllStudents'"
     " AND gradelevel='All Grades'"
 )
+_ABSENTEEISM_WHERE = (
+    "organizationlevel='School'"
+    " AND studentgrouptype='All'"
+)
+# Discipline: fetch all school rows without studentgrouptype filter — different year
+# releases use 'All', 'All Students', or other values; filter to All rows in Python.
+_SUSPENSION_LABEL = "Short-Term Out-of-School Suspension Rate"
+_DISCIPLINE_WHERE = "organizationlevel='School'"
+# Enrollment: fetch all school rows; filter to EL / All-students in Python.
+_ENROLLMENT_WHERE = "organizationlevel='School'"
+
+
+def _row_district_name(row: dict[str, str]) -> str:
+    """Return the district name from a row, trying multiple column name variants."""
+    for col in ("districtname", "district_name", "leaname", "organizationname", "agencyname"):
+        val = row.get(col, "")
+        if val:
+            return val
+    return ""
+
+
+def _row_school_name(row: dict[str, str]) -> str:
+    """Return the school name from a row, trying multiple column name variants."""
+    for col in ("schoolname", "school_name", "organizationname", "institutionname"):
+        val = row.get(col, "")
+        if val:
+            return val
+    return ""
+
+
+def _row_school_year(row: dict[str, str]) -> str:
+    """Return the school year from a row, trying multiple column name variants."""
+    for col in ("schoolyear", "school_year", "academicyear", "year"):
+        val = row.get(col, "")
+        if val:
+            return val
+    return ""
+
+
+def _is_suspension_row(row: dict[str, str]) -> bool:
+    """Return True if this discipline row is a short-term out-of-school suspension."""
+    for col in ("datalabel", "disciplinearea", "actiontype", "indicator", "measure"):
+        val = row.get(col, "")
+        if val:
+            return "short" in val.lower() and "suspension" in val.lower()
+    # If no label column found, include the row (dataset may contain only suspension rows)
+    return True
+
+
+def _absenteeism_value(row: dict[str, str]) -> float | None:
+    """Extract chronic absenteeism rate, trying multiple known column name variants."""
+    for col in ("percentagevalue", "chronicabsenteeismrate", "percentageabsent",
+                "chronicabsent", "percentchronic"):
+        raw = row.get(col)
+        if raw is not None:
+            return _parse_pct_string(raw)
+    value_cols = [k for k in row if any(t in k.lower() for t in ("percent", "rate", "absent", "value"))]
+    if value_cols:
+        print(f"  WARNING: chronic absenteeism — unexpected columns, found: {value_cols[:8]}", file=sys.stderr)
+    return None
+
+
+def _is_absenteeism_row(row: dict[str, str]) -> bool:
+    """Return True if this SQSS row contains the chronic absenteeism indicator."""
+    for col in ("datalabel", "indicator", "measure", "sqssindicator"):
+        val = row.get(col, "")
+        if val:
+            return "absent" in val.lower()
+    return True
+
+
+def _is_all_students_row(row: dict[str, str]) -> bool:
+    """Return True if this row represents all students (not a subgroup)."""
+    val = row.get("studentgrouptype", "").lower().strip()
+    return val in ("all", "all students", "total", "all student groups", "")
+
+
+def _suspension_value(row: dict[str, str]) -> float | None:
+    """Extract out-of-school suspension rate, trying multiple column name variants."""
+    for col in ("disciplinerate", "percentagevalue", "suspensionrate", "datavalue", "rate", "percentvalue"):
+        raw = row.get(col)
+        if raw is not None:
+            return _parse_pct_string(raw)
+    value_cols = [k for k in row if any(t in k.lower() for t in ("percent", "rate", "suspend", "value", "discipline"))]
+    if value_cols:
+        print(f"  WARNING: discipline — unexpected columns, found: {value_cols[:8]}", file=sys.stderr)
+    return None
+
+
+def _is_el_row(row: dict[str, str]) -> bool:
+    """Return True if this enrollment row is for English Learners."""
+    val = row.get("studentgrouptype", "").lower().strip()
+    return any(t in val for t in ("english language learner", "ell", "el ", "english learner"))
+
+
+def _el_enrollment_count(row: dict[str, str]) -> int | None:
+    """Extract EL enrollment count from an enrollment row."""
+    for col in ("studentcount", "enrollmentcount", "count", "students", "numberofstudents"):
+        raw = row.get(col)
+        if raw is not None:
+            try:
+                return int(float(raw))
+            except (ValueError, TypeError):
+                return None
+    return None
+
+
+def _total_enrollment_count(row: dict[str, str]) -> int | None:
+    """Extract total enrollment from an enrollment row (used when studentgrouptype=All)."""
+    for col in ("studentcount", "enrollmentcount", "count", "totalenrollment", "enrollment"):
+        raw = row.get(col)
+        if raw is not None:
+            try:
+                v = int(float(raw))
+                return v if v > 0 else None
+            except (ValueError, TypeError):
+                return None
+    return None
+
 
 
 def _fetch_csv(url: str, where: str = "") -> list[dict[str, str]]:
@@ -335,5 +485,128 @@ def fetch_ospi_metrics(
     if unmatched:
         for district, school in sorted(unmatched):
             print(f"  UNMATCHED OSPI school: {district!r} / {school!r}", file=sys.stderr)
+
+    return result
+
+
+def fetch_new_metrics(
+    schools: list[dict],
+    project_root: Path | None = None,
+) -> dict[tuple[str, str], dict[str, float | None]]:
+    """Download chronic absenteeism, discipline, EL share, and language data.
+
+    Returns {(school_id, year): {metric_key: value}}.
+    Each metric is absent from the dict (not None) if its dataset list is empty.
+    """
+    overrides = load_overrides(project_root) if project_root else {}
+    exact, by_district = _build_name_index(schools)
+
+    def _resolve(canonical: str, school_name: str) -> str | None:
+        key = (_norm_name(canonical), _norm_name(school_name))
+        return overrides.get(key) or _lookup_school_id(canonical, school_name, exact, by_district)
+
+    result: dict[tuple[str, str], dict[str, float | None]] = {}
+    unmatched: set[tuple[str, str]] = set()
+
+    def _entry(sid: str, year: str) -> dict:
+        return result.setdefault((sid, year), {})
+
+    # ── Chronic absenteeism (SQSS datasets) ─────────────────────────────────
+    for _label, url in CHRONIC_ABSENTEEISM_DATASETS:
+        print(f"Fetching chronic absenteeism data: {url}", file=sys.stderr)
+        try:
+            rows = _fetch_csv(url, _ABSENTEEISM_WHERE)
+        except Exception as exc:
+            print(f"  WARNING: failed to fetch {url}: {exc}", file=sys.stderr)
+            continue
+        _logged_cols = False
+        for row in rows:
+            if not _is_absenteeism_row(row):
+                continue
+            canonical = _norm_district(_row_district_name(row))
+            if not canonical:
+                continue
+            sid = _resolve(canonical, _row_school_name(row))
+            if not sid:
+                unmatched.add((canonical, _row_school_name(row)))
+                continue
+            year = _expand_year(_row_school_year(row))
+            value = _absenteeism_value(row)
+            if value is None and not _logged_cols:
+                print(f"  INFO: SQSS cols sample: {list(row.keys())[:12]}", file=sys.stderr)
+                _logged_cols = True
+            _entry(sid, year)["chronic_absentee_rate"] = value
+
+    # ── Discipline (short-term out-of-school suspension) ─────────────────────
+    # Note: datalabel is NOT in the SoQL WHERE (causes 400) — filter in Python.
+    for _label, url in DISCIPLINE_DATASETS:
+        print(f"Fetching discipline data: {url}", file=sys.stderr)
+        try:
+            rows = _fetch_csv(url, _DISCIPLINE_WHERE)
+        except Exception as exc:
+            print(f"  WARNING: failed to fetch {url}: {exc}", file=sys.stderr)
+            continue
+        if rows:
+            print(f"  INFO: discipline cols ({len(rows[0])} total): {list(rows[0].keys())}", file=sys.stderr)
+        matched_rows = 0
+        for row in rows:
+            if not _is_all_students_row(row):
+                continue
+            if not _is_suspension_row(row):
+                continue
+            matched_rows += 1
+            canonical = _norm_district(_row_district_name(row))
+            if not canonical:
+                continue
+            sid = _resolve(canonical, _row_school_name(row))
+            if not sid:
+                unmatched.add((canonical, _row_school_name(row)))
+                continue
+            year = _expand_year(_row_school_year(row))
+            value = _suspension_value(row)
+            _entry(sid, year)["suspension_rate"] = value
+        print(f"  matched {matched_rows} suspension rows from {url}", file=sys.stderr)
+
+    # ── English Learner share (Enrollment datasets, EL student group) ─────────
+    # Enrollment datasets have one row per school per student group.
+    # EL share = EL enrollment count / All-students enrollment count.
+    # Fetch all rows in one pass; separate into EL and All-students in Python.
+    el_counts: dict[tuple[str, str], int] = {}      # (sid, year) -> EL count
+    total_counts: dict[tuple[str, str], int] = {}   # (sid, year) -> total enrollment
+    for _label, url in ENGLISH_LEARNER_DATASETS:
+        print(f"Fetching English Learner data: {url}", file=sys.stderr)
+        try:
+            all_rows = _fetch_csv(url, _ENROLLMENT_WHERE)
+        except Exception as exc:
+            print(f"  WARNING: failed to fetch {url}: {exc}", file=sys.stderr)
+            continue
+        if all_rows:
+            print(f"  INFO: enrollment cols ({len(all_rows[0])} total): {list(all_rows[0].keys())}", file=sys.stderr)
+        for row in all_rows:
+            canonical = _norm_district(_row_district_name(row))
+            if not canonical:
+                continue
+            sid = _resolve(canonical, _row_school_name(row))
+            if not sid:
+                unmatched.add((canonical, _row_school_name(row)))
+                continue
+            year = _expand_year(_row_school_year(row))
+            if _is_el_row(row):
+                count = _el_enrollment_count(row)
+                if count is not None and count >= 0:
+                    el_counts[(sid, year)] = count
+            elif _is_all_students_row(row):
+                total = _total_enrollment_count(row)
+                if total is not None and total > 0:
+                    total_counts[(sid, year)] = total
+
+    for key, el in el_counts.items():
+        total = total_counts.get(key)
+        share = el / total if total and total > 0 else None
+        _entry(*key)["english_learner_share"] = share
+
+    if unmatched:
+        for district, school in sorted(unmatched):
+            print(f"  UNMATCHED new-metric school: {district!r} / {school!r}", file=sys.stderr)
 
     return result
