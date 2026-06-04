@@ -646,6 +646,7 @@
           if (!isSelected) {
             row.addEventListener('click', () => {
               state.selectedSchoolIds.add(school.id);
+              document.getElementById('school-search').value = '';
               renderAll();
             });
           }
