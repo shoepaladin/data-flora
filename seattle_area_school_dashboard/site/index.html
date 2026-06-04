@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Seattle Area Public Schools Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
   <style>
     :root {
       --bg: #f4efe6;
@@ -558,13 +558,22 @@
         renderSearchResults();
       });
 
+      document.addEventListener('click', (e) => {
+        const searchArea = document.querySelector('.search-area');
+        if (!searchArea.contains(e.target)) {
+          state.schoolSearch = '';
+          document.getElementById('school-search').value = '';
+          document.getElementById('search-results').style.display = 'none';
+        }
+      });
+
       document.getElementById('log-scale-checkbox').addEventListener('change', (e) => {
         state.logScale = e.target.checked;
         updateView();
       });
 
       document.getElementById('build-meta').textContent =
-        `Generated ${new Date(dashboardData.generated_at).toLocaleDateString()} · NCES Common Core of Data`;
+        `Generated ${new Date(dashboardData.generated_at).toLocaleDateString()} · NCES CCD & OSPI`;
 
       let chart;
       try {
@@ -926,10 +935,13 @@
           if (val !== null && avg !== null) {
             const diff = val - avg;
             let text, cls;
+            const inverseMetric = ['chronic_absentee_rate', 'suspension_rate'].includes(state.metricKey);
             if (def.format === 'percent') {
               const pp = diff * 100;
               text = (pp >= 0 ? '+' : '') + pp.toFixed(1) + ' pp';
-              cls = diff > 0.005 ? 'diff-above' : diff < -0.005 ? 'diff-below' : 'diff-neutral';
+              const aboveClass = inverseMetric ? 'diff-below' : 'diff-above';
+              const belowClass = inverseMetric ? 'diff-above' : 'diff-below';
+              cls = diff > 0.005 ? aboveClass : diff < -0.005 ? belowClass : 'diff-neutral';
             } else {
               text = (diff >= 0 ? '+' : '') + Math.round(diff).toLocaleString();
               cls = diff > 0 ? 'diff-above' : diff < 0 ? 'diff-below' : 'diff-neutral';

@@ -19,6 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from seattle_schools_dashboard.nces import METRIC_DEFINITIONS  # noqa: E402
 from seattle_schools_dashboard.ospi import fetch_new_metrics  # noqa: E402
 
 data_path = ROOT / "site" / "dashboard-data.json"
@@ -40,6 +41,8 @@ for record in payload["records"]:
     record["chronic_absentee_rate"] = match.get("chronic_absentee_rate")
     record["suspension_rate"] = match.get("suspension_rate")
     record["english_learner_share"] = match.get("english_learner_share")
+
+payload["metrics"] = METRIC_DEFINITIONS
 
 data_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 print(f"Updated {data_path}")
