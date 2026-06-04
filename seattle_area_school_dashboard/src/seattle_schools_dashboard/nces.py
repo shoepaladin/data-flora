@@ -193,7 +193,7 @@ METRIC_DEFINITIONS = {
         "label": "English Learner share",
         "category": "Student Groups",
         "format": "percent",
-        "description": "Share of students designated as English Learners (OSPI enrollment file).",
+        "description": "Share of students federally designated as English Learners (EL) — students assessed as having limited English proficiency whose home language is not English and who receive ESL or bilingual support services (OSPI enrollment file).",
     },
 }
 
