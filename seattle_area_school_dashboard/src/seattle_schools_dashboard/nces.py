@@ -41,6 +41,16 @@ WIDE_RACE_COLUMN_MAP = {
     "WH": "white_share",
 }
 
+# Standalone sex-total columns published in some NCES wide-format years.
+# When present these are preferred because they include students of unspecified race.
+# Column names are unconfirmed; treated as optional — missing columns fall back to
+# the race×sex intersection sums below.
+WIDE_MALE_TOTAL_COLUMNS = ("TOTM",)
+WIDE_FEMALE_TOTAL_COLUMNS = ("TOTF",)
+
+# Race×sex intersection columns — male and female counts per identified race group.
+# Used when standalone sex totals are absent; students with unspecified race are not
+# captured here and will inflate sex_not_specified_share as a residual.
 WIDE_MALE_COLUMNS = ("AMALM", "ASALM", "BLALM", "HIALM", "HPALM", "TRALM", "WHALM")
 WIDE_FEMALE_COLUMNS = ("AMALF", "ASALF", "BLALF", "HIALF", "HPALF", "TRALF", "WHALF")
 LEGACY_SCHOOL_LEVEL_MAP = {
@@ -91,73 +101,75 @@ METRIC_DEFINITIONS = {
         "label": "Male share",
         "category": "Sex",
         "format": "percent",
-        "description": "Male share of enrollment using the derived NCES membership denominator with adult education removed.",
+        "description": "Male share of enrollment using the NCES membership file with adult education removed. Note: in 2015-16 (row-based NCES schema) sex is counted independently of race; in later years it is derived from race-by-sex columns, so students with unspecified race may be undercounted in male/female and overrepresented in 'sex not specified'.",
     },
     "sex_not_specified_share": {
         "label": "Sex not specified",
         "category": "Sex",
         "format": "percent",
-        "description": "Share of enrollment reported with sex not specified in the NCES membership file.",
+        "description": "Share of enrollment with sex not specified. In years using the wide NCES schema (2016-17 onward) this is a residual that includes students whose race is also unspecified, so it may be slightly overstated relative to 2015-16.",
     },
     "american_indian_alaska_native_share": {
         "label": "American Indian or Alaska Native",
         "category": "Race/Ethnicity",
         "format": "percent",
-        "description": "Race/ethnicity share from the NCES school membership file with adult education removed.",
+        "description": "Race/ethnicity share from the NCES membership file with adult education removed. 'Race not specified' is an explicit category in 2015-16 and a residual in later years; small discontinuities at the 2015-16/2016-17 boundary are a schema artifact, not a real demographic shift.",
     },
     "asian_share": {
         "label": "Asian share",
         "category": "Race/Ethnicity",
         "format": "percent",
-        "description": "Race/ethnicity share from the NCES school membership file with adult education removed.",
+        "description": "Race/ethnicity share from the NCES membership file with adult education removed. 'Race not specified' is an explicit category in 2015-16 and a residual in later years; small discontinuities at the 2015-16/2016-17 boundary are a schema artifact, not a real demographic shift.",
     },
     "black_african_american_share": {
         "label": "Black or African American",
         "category": "Race/Ethnicity",
         "format": "percent",
-        "description": "Race/ethnicity share from the NCES school membership file with adult education removed.",
+        "description": "Race/ethnicity share from the NCES membership file with adult education removed. 'Race not specified' is an explicit category in 2015-16 and a residual in later years; small discontinuities at the 2015-16/2016-17 boundary are a schema artifact, not a real demographic shift.",
     },
     "hispanic_latino_share": {
         "label": "Hispanic/Latino share",
         "category": "Race/Ethnicity",
         "format": "percent",
-        "description": "Race/ethnicity share from the NCES school membership file with adult education removed.",
+        "description": "Race/ethnicity share from the NCES membership file with adult education removed. 'Race not specified' is an explicit category in 2015-16 and a residual in later years; small discontinuities at the 2015-16/2016-17 boundary are a schema artifact, not a real demographic shift.",
     },
     "native_hawaiian_pacific_islander_share": {
         "label": "Native Hawaiian or Pacific Islander",
         "category": "Race/Ethnicity",
         "format": "percent",
-        "description": "Race/ethnicity share from the NCES school membership file with adult education removed.",
+        "description": "Race/ethnicity share from the NCES membership file with adult education removed. 'Race not specified' is an explicit category in 2015-16 and a residual in later years; small discontinuities at the 2015-16/2016-17 boundary are a schema artifact, not a real demographic shift.",
     },
     "two_or_more_races_share": {
         "label": "Two or more races",
         "category": "Race/Ethnicity",
         "format": "percent",
-        "description": "Race/ethnicity share from the NCES school membership file with adult education removed.",
+        "description": "Race/ethnicity share from the NCES membership file with adult education removed. 'Race not specified' is an explicit category in 2015-16 and a residual in later years; small discontinuities at the 2015-16/2016-17 boundary are a schema artifact, not a real demographic shift.",
     },
     "white_share": {
         "label": "White share",
         "category": "Race/Ethnicity",
         "format": "percent",
-        "description": "Race/ethnicity share from the NCES school membership file with adult education removed.",
+        "description": "Race/ethnicity share from the NCES membership file with adult education removed. 'Race not specified' is an explicit category in 2015-16 and a residual in later years; small discontinuities at the 2015-16/2016-17 boundary are a schema artifact, not a real demographic shift.",
     },
     "race_not_specified_share": {
         "label": "Race not specified",
         "category": "Race/Ethnicity",
         "format": "percent",
-        "description": "Share of enrollment reported with race/ethnicity not specified in the NCES membership file.",
+        "description": "Share of enrollment with race/ethnicity not specified. In 2015-16 this is an explicit NCES-reported category; in 2016-17 onward it is computed as enrollment minus the sum of the seven identified-race counts, so it absorbs any rounding or suppression gaps.",
     },
     "ela_proficiency_rate": {
         "label": "ELA proficiency",
         "category": "Assessment",
         "format": "percent",
-        "description": "Share of tested students meeting or exceeding standard on the Smarter Balanced ELA assessment (OSPI). 2019-20 statewide testing was cancelled (COVID); 2020-21 had low participation.",
+        "description": "Share of tested students meeting or exceeding standard on the Smarter Balanced ELA assessment (OSPI). 2019-20 statewide testing was cancelled (COVID). 2020-21 statewide participation was ~54% — well below the 95% federal threshold — so individual school values may not be representative. OSPI changed the reporting label from 'percent met standard' to 'percent consistent grade-level knowledge' in 2022-23; the underlying Smarter Balanced cut scores are unchanged.",
+        "caveat_years": {"2020-2021": "Low test participation (~54% statewide). Values may not be representative."},
     },
     "math_proficiency_rate": {
         "label": "Math proficiency",
         "category": "Assessment",
         "format": "percent",
-        "description": "Share of tested students meeting or exceeding standard on the Smarter Balanced Math assessment (OSPI). 2019-20 statewide testing was cancelled (COVID); 2020-21 had low participation.",
+        "description": "Share of tested students meeting or exceeding standard on the Smarter Balanced Math assessment (OSPI). 2019-20 statewide testing was cancelled (COVID). 2020-21 statewide participation was ~54% — well below the 95% federal threshold — so individual school values may not be representative. OSPI changed the reporting label from 'percent met standard' to 'percent consistent grade-level knowledge' in 2022-23; the underlying Smarter Balanced cut scores are unchanged.",
+        "caveat_years": {"2020-2021": "Low test participation (~54% statewide). Values may not be representative."},
     },
     "four_year_grad_rate": {
         "label": "4-yr graduation rate",
@@ -403,10 +415,12 @@ def read_membership(csv_path: Path, selected_school_ids: set[str]) -> dict[str, 
             continue
 
         record = school_year_records.setdefault(school_id, make_school_year_record(school_id))
-        if "TOTAL_INDICATOR" in row:
-            apply_membership_row(record, row)
-        else:
+        # Some NCES years (e.g. 2017-18, 2021-22) carry TOTAL_INDICATOR in the schema
+        # alongside MEMBER; checking MEMBER first ensures those files use the wide path.
+        if "MEMBER" in row:
             apply_wide_membership_row(record, row)
+        elif "TOTAL_INDICATOR" in row:
+            apply_membership_row(record, row)
 
     return school_year_records
 
@@ -464,8 +478,22 @@ def apply_wide_membership_row(record: dict[str, object], row: dict[str, str]) ->
         record["race_counts"][metric_key] = count
         known_race_total += count
 
-    male_total = sum((_safe_int(row.get(column)) or 0) for column in WIDE_MALE_COLUMNS)
-    female_total = sum((_safe_int(row.get(column)) or 0) for column in WIDE_FEMALE_COLUMNS)
+    # Prefer standalone sex totals (include all-race students); fall back to
+    # summing race×sex intersections (excludes students with unspecified race).
+    male_standalone = next(
+        (_safe_int(row.get(col)) for col in WIDE_MALE_TOTAL_COLUMNS if _safe_int(row.get(col)) is not None),
+        None,
+    )
+    female_standalone = next(
+        (_safe_int(row.get(col)) for col in WIDE_FEMALE_TOTAL_COLUMNS if _safe_int(row.get(col)) is not None),
+        None,
+    )
+    male_total = male_standalone if male_standalone is not None else sum(
+        (_safe_int(row.get(column)) or 0) for column in WIDE_MALE_COLUMNS
+    )
+    female_total = female_standalone if female_standalone is not None else sum(
+        (_safe_int(row.get(column)) or 0) for column in WIDE_FEMALE_COLUMNS
+    )
     record["sex_counts"]["female_share"] = female_total
     record["sex_counts"]["male_share"] = male_total
     record["race_counts"]["race_not_specified_share"] = max(enrollment - known_race_total, 0)

@@ -13,7 +13,8 @@ seattle_area_school_dashboard/site/pca-analysis.html
 # Demo/test artifacts
 demo.html
 test-resize.js
+
+# Node (used locally to bundle Chart.js for demo builds)
 node_modules/
 package.json
 package-lock.json
-
