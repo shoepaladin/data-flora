@@ -488,14 +488,14 @@
           </article>
         </section>
         <section class="panel" id="vs-district-panel" style="display:none">
-          <h2 style="margin:0 0 3px;font-size:1rem;">vs. District average</h2>
+          <h2 style="margin:0 0 3px;font-size:1rem;">vs. District average (all schools)</h2>
           <div class="chart-desc" id="vs-year-desc"></div>
           <table class="vs-table">
             <thead>
               <tr>
                 <th>School</th>
                 <th>Value</th>
-                <th>District avg</th>
+                <th>District avg (all schools)</th>
                 <th>Difference</th>
               </tr>
             </thead>
@@ -853,7 +853,7 @@
           if (!district) continue;
           const color = palette[districtColorIndex[districtId] % palette.length];
           datasets.push({
-            label: `${district.name} district avg`,
+            label: `${district.name} district avg (all schools)`,
             data: years.map((yr) => districtEnrollmentWeightedAvg(districtId, state.metricKey, yr)),
             borderColor: hexToRgba(color, 0.45),
             backgroundColor: 'transparent',
