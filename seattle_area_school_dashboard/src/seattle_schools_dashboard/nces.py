@@ -252,7 +252,7 @@ def build_dashboard_payload(project_root: Path) -> dict[str, object]:
         ]
 
         return {
-            "generated_at": _utc_timestamp(),
+            "generated_at": utc_timestamp(),
             "years": [school_year.data_year for school_year in school_years],
             "districts": ordered_districts,
             "schools": ordered_schools,
@@ -749,7 +749,7 @@ def _find_data_entry_name(zip_path: Path) -> str:
     return candidates[0]
 
 
-def _utc_timestamp() -> str:
+def utc_timestamp() -> str:
     from datetime import UTC, datetime
 
     return datetime.now(UTC).isoformat()

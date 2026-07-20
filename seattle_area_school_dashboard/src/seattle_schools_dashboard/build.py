@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from seattle_schools_dashboard.nces import METRIC_DEFINITIONS, build_dashboard_payload
+from seattle_schools_dashboard.nces import METRIC_DEFINITIONS, build_dashboard_payload, utc_timestamp
 from seattle_schools_dashboard.ospi import fetch_new_metrics, fetch_ospi_metrics
 
 
@@ -480,8 +480,14 @@ HTML_TEMPLATE = """<!doctype html>
       }
     });
 
-    document.getElementById('build-meta').textContent =
-      `Generated ${new Date(dashboardData.generated_at).toLocaleDateString()} · NCES Common Core of Data`;
+    {
+      const sources = dashboardData.source_pulled_at || {};
+      const fmt = (iso) => iso ? new Date(iso).toLocaleDateString() : 'unknown';
+      document.getElementById('build-meta').textContent =
+        `NCES CCD: ${fmt(sources.nces || dashboardData.generated_at)}` +
+        ` · OSPI assessment: ${fmt(sources.ospi_assessment)}` +
+        ` · OSPI climate/EL: ${fmt(sources.ospi_new_metrics)}`;
+    }
     document.getElementById('select-all-districts').addEventListener('click', () => {
       dashboardData.districts.forEach((d) => {
         state.selectedDistrictIds.add(d.id);
@@ -862,7 +868,9 @@ def build_site(project_root: Path) -> None:
     nces_payload = build_dashboard_payload(project_root)
     schools = nces_payload["schools"]
     ospi_metrics = fetch_ospi_metrics(schools, project_root=project_root)
+    ospi_assessment_pulled_at = utc_timestamp()
     new_metrics  = fetch_new_metrics(schools, project_root=project_root)
+    ospi_new_metrics_pulled_at = utc_timestamp()
 
     for record in nces_payload["records"]:
         key = (record["school_id"], record["year"])
@@ -884,6 +892,11 @@ def build_site(project_root: Path) -> None:
         "title": "Seattle Area School Dashboard",
         "subtitle": "Real NCES CCD build using the ten latest school-year releases from 2015-2016 through 2024-2025.",
         "metrics": METRIC_DEFINITIONS,
+        "source_pulled_at": {
+            "nces": nces_payload["generated_at"],
+            "ospi_assessment": ospi_assessment_pulled_at,
+            "ospi_new_metrics": ospi_new_metrics_pulled_at,
+        },
         "initial_state": {
             "selected_school_ids": initial_school_ids,
             "metric_key": "enrollment",

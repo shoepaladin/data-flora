@@ -16,6 +16,7 @@ from seattle_schools_dashboard.nces import (
     normalize_school_level,
     read_membership,
     safe_share,
+    utc_timestamp,
 )
 
 
@@ -238,6 +239,14 @@ class NcesAggregationTests(unittest.TestCase):
         self.assertEqual(normalize_school_level("1"), "Elementary")
         self.assertEqual(normalize_school_level("3"), "High")
         self.assertEqual(normalize_school_level("N"), "Other")
+
+    def test_utc_timestamp_is_iso_format_with_utc_offset(self) -> None:
+        from datetime import datetime
+
+        timestamp = utc_timestamp()
+        parsed = datetime.fromisoformat(timestamp)
+        self.assertIsNotNone(parsed.tzinfo)
+        self.assertEqual(parsed.utcoffset().total_seconds(), 0)
 
 
 class MembershipSchemaRoutingTests(unittest.TestCase):
