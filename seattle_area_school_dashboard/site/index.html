@@ -572,8 +572,14 @@
         updateView();
       });
 
-      document.getElementById('build-meta').textContent =
-        `Generated ${new Date(dashboardData.generated_at).toLocaleDateString()} · NCES CCD & OSPI`;
+      {
+        const sources = dashboardData.source_pulled_at || {};
+        const fmt = (iso) => iso ? new Date(iso).toLocaleDateString() : 'unknown';
+        document.getElementById('build-meta').textContent =
+          `NCES CCD: ${fmt(sources.nces || dashboardData.generated_at)}` +
+          ` · OSPI assessment: ${fmt(sources.ospi_assessment)}` +
+          ` · OSPI climate/EL: ${fmt(sources.ospi_new_metrics)}`;
+      }
 
       let chart;
       try {
